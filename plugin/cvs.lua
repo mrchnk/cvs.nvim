@@ -1,8 +1,10 @@
+local telescope_diff = require('cvs.telescope_diff')
+
 vim.api.nvim_create_user_command("CVSDiff", function (opts)
-  local diff = vim.fn.system('cvs -qn update')
-  print(diff)
+  telescope_diff()
 end, {
   desc = 'Print changed files',
-  nargs = 0,
+  complete = 'file',
+  nargs = '?',
 })
 
