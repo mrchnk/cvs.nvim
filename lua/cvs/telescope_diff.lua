@@ -1,5 +1,7 @@
 local pickers = require('telescope.pickers')
 local finders = require('telescope.finders')
+local actions = require('telescope.actions')
+local action_state = require('telescope.actions.state')
 local Previewer = require('telescope.previewers.previewer')
 
 local function parse_diff(diff)
@@ -7,28 +9,26 @@ local function parse_diff(diff)
   local entry
   local result = {}
   local read_diff = false
-  for i, line in ipairs(lines) do
-    if i == 1 then
-      -- diff head: cvs diff: Diffing .
-    else
-      if vim.startswith(line, "Index: ") then
-        local file = string.sub(line, 8)
-        entry = {
-          file = file,
-          head = {},
-          diff = {},
-        }
-        table.insert(result, entry)
-        read_diff = false
-      elseif vim.startswith(line, "diff ") then
-        read_diff = true;
-      end
-      if entry then
-        if read_diff then
-          table.insert(entry.diff, line)
-        else
-          table.insert(entry.head, line)
-        end
+  for _, line in ipairs(lines) do
+    if vim.startswith(line, "cvs diff: Diffing ") then
+      -- mac cvs header
+    elseif vim.startswith(line, "Index: ") then
+      local file = string.sub(line, 8)
+      entry = {
+        file = file,
+        head = {},
+        diff = {},
+      }
+      table.insert(result, entry)
+      read_diff = false
+    elseif vim.startswith(line, "diff ") then
+      read_diff = true;
+    end
+    if entry then
+      if read_diff then
+        table.insert(entry.diff, line)
+      else
+        table.insert(entry.head, line)
       end
     end
   end
@@ -70,6 +70,11 @@ local function make_previewer()
   }
 end
 
+local function on_select(bufnr)
+  local entry = action_state.get_selected_entry()
+  vim.print(entry)
+end
+
 return function (opts)
   local diff = diff_dir()
   local results = parse_diff(diff)
@@ -77,9 +82,13 @@ return function (opts)
     prompt_title = "changed file",
     finder = finders.new_table{
       results = results,
-      entry_maker = entry_maker
+      entry_maker = entry_maker,
     },
     preview_title = "diff",
-    previewer = make_previewer()
+    previewer = make_previewer(),
+    attach_mappings = function(self, map)
+      -- actions.select_default:replace(on_select)
+      return true
+    end
   }:find()
 end
