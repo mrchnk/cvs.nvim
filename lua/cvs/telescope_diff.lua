@@ -3,6 +3,7 @@ local finders = require('telescope.finders')
 local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
 local Previewer = require('telescope.previewers.previewer')
+local file_diff = require('cvs.file_diff')
 
 local function parse_diff(diff)
   local lines = vim.split(diff, "\n")
@@ -72,7 +73,12 @@ end
 
 local function on_select(bufnr)
   local entry = action_state.get_selected_entry()
-  vim.print(entry)
+  local file = entry.value.file
+  local picker = action_state.get_current_picker(bufnr)
+  pickers.on_close_prompt(bufnr)
+  vim.api.nvim_set_current_win(picker.original_win_id)
+  -- local win_id = picker.get_selection_window(picker, entry)
+  file_diff(file, {})
 end
 
 return function (opts)
@@ -87,7 +93,7 @@ return function (opts)
     preview_title = "diff",
     previewer = make_previewer(),
     attach_mappings = function(self, map)
-      -- actions.select_default:replace(on_select)
+      actions.select_default:replace(on_select)
       return true
     end
   }:find()

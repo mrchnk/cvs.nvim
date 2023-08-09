@@ -49,7 +49,20 @@ local function _parse(lines)
     local line = it()
     assert(line == '---', 'wrong diff format')
   end
+  local head = {}
   local commands = {}
+  for line in it do
+    if vim.startswith(line, 'retrieving revision ') then
+      local rev = string.sub(line, 21)
+      if head.rev1 then
+        head.rev2 = rev
+      else
+        head.rev1 = rev
+      end
+    elseif vim.startswith(line, 'diff ') then
+      break
+    end
+  end
   for line in it do
     local r1, cmd, r2 = string.match(line, '([%d,]+)([acd])([%d,]+)')
     if r1 and cmd and r2 and line == r1 .. cmd .. r2 then
@@ -73,7 +86,7 @@ local function _parse(lines)
       end
     end
   end
-  return commands
+  return commands, head
 end
 
 local function _patch(lines, commands_it)
