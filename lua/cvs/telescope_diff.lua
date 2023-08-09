@@ -1,6 +1,7 @@
 local pickers = require('telescope.pickers')
 local finders = require('telescope.finders')
 local actions = require('telescope.actions')
+local sorters = require('telescope.sorters')
 local action_state = require('telescope.actions.state')
 local Previewer = require('telescope.previewers.previewer')
 local file_diff = require('cvs.file_diff')
@@ -90,6 +91,7 @@ return function (opts)
       results = results,
       entry_maker = entry_maker,
     },
+    sorter = sorters.get_fzy_sorter{},
     preview_title = "diff",
     previewer = make_previewer(),
     attach_mappings = function(self, map)
