@@ -50,9 +50,11 @@ local function open_tab(buf_left, buf_right)
   vim.cmd('tab sb' .. buf_right)
   _win_right = vim.api.nvim_get_current_win()
   vim.cmd.diffthis()
+  vim.api.nvim_win_set_option(_win_right, 'foldmethod', 'diff')
   vim.cmd('vertical sb' .. buf_left)
   _win_left = vim.api.nvim_get_current_win()
   vim.cmd.diffthis()
+  vim.api.nvim_win_set_option(_win_left, 'foldmethod', 'diff')
 end
 
 return function (file, opts)
