@@ -47,6 +47,7 @@ end
 local function entry_maker(entry)
   return {
     value = entry,
+    filename = entry.file,
     ordinal = entry.file,
     display = entry.file,
   }
@@ -77,7 +78,6 @@ local function on_select(bufnr)
   local picker = action_state.get_current_picker(bufnr)
   pickers.on_close_prompt(bufnr)
   vim.api.nvim_set_current_win(picker.original_win_id)
-  -- local win_id = picker.get_selection_window(picker, entry)
   file_diff(file, {})
 end
 
@@ -93,7 +93,7 @@ return function (opts)
     preview_title = "diff",
     previewer = make_previewer(),
     attach_mappings = function(self, map)
-      actions.select_default:replace(on_select)
+      map('i', '<C-d>', on_select)
       return true
     end
   }:find()
