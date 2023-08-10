@@ -48,7 +48,7 @@ local function parse_diff(diff)
 end
 
 local function diff_dir()
-  local result = vim.fn.system('cvs diff -U 3')
+  local result = vim.fn.system('cvs diff -U 3 -N')
   if vim.v.shell_error == 0 then
     error('No changes found')
   end
@@ -72,28 +72,42 @@ local function highlight(buf, matches)
   end
 end
 
+local scroll_fn = function(self, direction)
+  if not self._win then
+    return
+  end
+  local input = direction > 0 and [[]] or [[]]
+  local count = math.abs(direction)
+  vim.api.nvim_win_call(self._win, function()
+    vim.cmd([[normal! ]] .. count .. input)
+  end)
+end
+
 local function make_previewer()
   return Previewer:new{
     setup = function (self, status)
-      local buf = vim.api.nvim_create_buf(false, true)
-      vim.api.nvim_buf_set_option(buf, 'syntax', 'diff')
-      self._buf = buf
+      if not self._buf then
+        local buf = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_buf_set_option(buf, 'syntax', 'diff')
+        self._buf = buf
+      end
     end,
     teardown = function (self, status)
-      local buf = self._buf
-      if buf then
+      if self._buf then
+        local buf = self._buf
         vim.api.nvim_buf_delete(buf, {force = true})
       end
     end,
     preview_fn = function (self, entry, status)
       local buf = self._buf
+      self._win = status.preview_win
       vim.api.nvim_win_set_buf(status.preview_win, buf)
       vim.api.nvim_buf_set_lines(buf, 0, -1, true, entry.value.diff)
-      --vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
       if entry.matches then
         highlight(buf, entry.matches)
       end
     end,
+    scroll_fn = scroll_fn,
   }
 end
 
@@ -120,6 +134,7 @@ local function match(entry, prompt)
   end
   return file_match or #matches > 0, matches
 end
+
 
 local function make_finder(results)
   return setmetatable({
@@ -148,6 +163,8 @@ return function (opts)
     previewer = make_previewer(),
     attach_mappings = function(self, map)
       map('i', '<C-d>', on_select)
+      map('i', '<C-j>', actions.preview_scrolling_down)
+      map('i', '<C-k>', actions.preview_scrolling_up)
       return true
     end
   }:find()
