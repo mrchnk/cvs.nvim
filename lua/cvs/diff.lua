@@ -1,5 +1,5 @@
 local function cvs_diff(opts)
-  local result = vim.fn.system('cvs diff -U 3 -N')
+  local result = vim.fn.system('cvs -n diff -U 3 -N')
   if vim.v.shell_error == 0 then
     error('No changes found')
   end

@@ -1,5 +1,5 @@
 local function cvs_up(file)
-  local result = vim.fn.system('cvs up -p ' .. file)
+  local result = vim.fn.system('cvs -n up -p ' .. file)
   if vim.v.shell_error > 0 then
     error(result)
   end
