@@ -25,7 +25,7 @@ local function preview_fn(self, entry, status)
   local buf = self._buf
   self._win = status.preview_win
   vim.api.nvim_win_set_buf(status.preview_win, buf)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, true, entry.value.diff)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, true, entry.value.body)
   if entry.matches then
     highlight(buf, entry.matches)
   end

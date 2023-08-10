@@ -6,7 +6,7 @@ local function match(diff_entry, prompt)
   end
   local file_match = fzy.has_match(prompt, diff_entry.file)
   local matches = {}
-  for row, line in ipairs(diff_entry.diff) do
+  for row, line in ipairs(diff_entry.body) do
     local col = string.find(line, prompt, 2)
     if col then
       table.insert(matches, {row, col, string.len(prompt)})

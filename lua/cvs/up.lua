@@ -39,10 +39,10 @@ local function parse(out)
     if line == "===================================================================" then
       add_entry()
       head = {}
-    elseif line == "***************" then
-      body = {}
     elseif body then
       table.insert(body, line)
+    elseif line == "***************" then
+      body = {}
     elseif head then
       table.insert(head, line)
     end
