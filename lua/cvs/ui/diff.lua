@@ -40,7 +40,7 @@ return function (file, opts)
     local cvs_file = cvs_files[1]
     buf_left = create_buf(cvs_file.body, file, cvs_file.rev)
   else
-    buf_left = create_buf({}, file, "UNVERSIONED")
+    buf_left = create_buf({}, file, 'UNVERSIONED')
   end
   local buf_right = open_file(file)
   open_tab(buf_left, buf_right)

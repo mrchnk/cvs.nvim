@@ -1,7 +1,7 @@
 local fzy = require('telescope.algos.fzy')
 
 local function match(diff_entry, prompt)
-  if not prompt or prompt == "" then
+  if not prompt or prompt == '' then
     return true
   end
   local file_match = fzy.has_match(prompt, diff_entry.file)

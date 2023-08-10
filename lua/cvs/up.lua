@@ -12,17 +12,17 @@ local function make_entry(head, body)
     body = body,
   }
   for _, line in ipairs(head) do
-    if vim.startswith(line, "Checking out ") then
+    if vim.startswith(line, 'Checking out ') then
       entry.file = string.sub(line, 14)
-    elseif vim.startswith(line, "VERS: ") then
+    elseif vim.startswith(line, 'VERS: ') then
       entry.rev = string.sub(line, 7)
     end
   end
-  return entry;
+  return entry
 end
 
 local function parse(out)
-  local lines = vim.split(out, "\n")
+  local lines = vim.split(out, '\n')
   -- remove nl at the end
   lines[#lines] = nil
   local result = {}
@@ -36,12 +36,12 @@ local function parse(out)
     body = nil
   end
   for _, line in ipairs(lines) do
-    if line == "===================================================================" then
+    if line == '===================================================================' then
       add_entry()
       head = {}
     elseif body then
       table.insert(body, line)
-    elseif line == "***************" then
+    elseif line == '***************' then
       body = {}
     elseif head then
       table.insert(head, line)

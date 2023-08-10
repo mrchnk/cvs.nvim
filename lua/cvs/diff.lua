@@ -6,8 +6,8 @@ local function cvs_diff(opts)
   return result
 end
 
-local function make_entry(head, body, file)
-  local entry = {
+local function make_entry(file, head, body)
+  return {
     file = file,
     head = head,
     body = body,
@@ -15,7 +15,7 @@ local function make_entry(head, body, file)
 end
 
 local function parse(diff)
-  local lines = vim.split(diff, "\n")
+  local lines = vim.split(diff, '\n')
   -- trim last line
   lines[#lines] = nil
   local result = {}
@@ -24,29 +24,25 @@ local function parse(diff)
   local body
   local function add_entry()
     if body then
-      table.insert(result, {
-        file = file,
-        head = head,
-        body = body
-      })
+      table.insert(result, make_entry(file, head, body))
       head = nil
       body = nil
       file = nil
     end
   end
   for _, line in ipairs(lines) do
-    if vim.startswith(line, "cvs diff: ") then
+    if vim.startswith(line, 'cvs diff: ') then
       -- extra output
-    elseif vim.startswith(line, "Index: ") then
+    elseif vim.startswith(line, 'Index: ') then
       add_entry()
       file = string.sub(line, 8)
     elseif body then
       table.insert(body, line)
-    elseif vim.startswith(line, "diff ") then
+    elseif vim.startswith(line, 'diff ') then
       body = {line}
     elseif head then
       table.insert(head, line)
-    elseif line == "===================================================================" then
+    elseif line == '===================================================================' then
       head = {}
     end
   end
