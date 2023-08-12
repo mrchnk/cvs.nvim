@@ -69,6 +69,5 @@ end
 return function (opts)
   local out = cvs_diff(opts)
   local result = parse(out)
-  vim.print(result)
   return result
 end
