@@ -1,10 +1,16 @@
 local finders = require('telescope.finders')
 
 local function make_entry(log_entry)
+  local title = log_entry.title
+  local author = log_entry.author
   return {
     value = log_entry,
-    ordinal = log_entry.title,
-    display = log_entry.title,
+    ordinal = title,
+    display = function ()
+      local text = string.format('%s: %s', author, title)
+      local hl = { { { 0, #author+1 }, 'Constant' } }
+      return text, hl
+    end,
   }
 end
 
