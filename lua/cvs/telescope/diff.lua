@@ -14,8 +14,15 @@ local function diff_file(bufnr)
   ui_diff(entry.value)
 end
 
+local function revert_file(bufnr)
+  local entry = action_state.get_selected_entry()
+  local file = entry.filename
+  vim.cmd(string.format('!cvs up -C "%s"', file))
+end
+
 local function attach_mappings(self, map)
   map('i', '<C-d>', diff_file)
+  map('i', '<C-r>', revert_file)
   map('i', '<C-j>', actions.preview_scrolling_down)
   map('i', '<C-k>', actions.preview_scrolling_up)
   return true
