@@ -6,3 +6,9 @@ vim.api.nvim_create_user_command("CVSDiff", cmd.diff, {
   nargs = '?',
 })
 
+vim.api.nvim_create_user_command("CVSLog", cmd.log, {
+  desc = 'Print changed files',
+  complete = 'file',
+  nargs = '?',
+})
+

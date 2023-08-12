@@ -52,6 +52,8 @@ return function (args)
     _ =
     read_opt(token, '-C') and set_opt('context') or
     read_opt(token, '-U') and set_opt('context') or
+    read_opt(token, '-d') and set_opt('date_range') or
+    read_opt(token, '-A') and push_opt('author') or
     read_opt(token, '-r') and push_opt('rev') or
     read_opt(token, '-D') and push_opt('date') or
     push_file(token)
