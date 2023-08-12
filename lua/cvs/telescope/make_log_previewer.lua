@@ -51,6 +51,7 @@ return function ()
       if self._buf then
         local buf = self._buf
         vim.api.nvim_buf_delete(buf, {force = true})
+        self._buf = nil
       end
     end,
     preview_fn = preview_fn,

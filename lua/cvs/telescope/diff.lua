@@ -13,12 +13,18 @@ local function attach_mappings(self, map)
   return true
 end
 
-return function (diff_results)
+return function (diff_results, pp)
   pickers.new{
     finder = make_finder(diff_results),
     sorter = sorters.highlighter_only{},
     previewer = make_previewer(),
-    attach_mappings = attach_mappings,
+    attach_mappings = function (self, map)
+      if pp then
+        map('i', '<C-l>', function () pp:find() end)
+      end
+      attach_mappings(self, map)
+      return true
+    end,
   }:find()
 end
 
