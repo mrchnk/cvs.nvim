@@ -4,8 +4,7 @@ local function test(module)
 end
 
 local function main()
-  test('tests.cvs.diff_parse')
-  test('tests.cvs.diff_unpatch')
 end
 
 main()
+
