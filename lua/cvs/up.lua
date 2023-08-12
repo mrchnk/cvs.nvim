@@ -1,58 +1,26 @@
-local function cvs_up(file)
-  local result = vim.fn.system('cvs -n up -p ' .. file)
+local function cvs_up(file, rev)
+  local cmd = string.format('cvs -nq up -p -r %s "%s"', rev, file)
+  local result = vim.fn.system(cmd)
   if vim.v.shell_error > 0 then
     error(result)
   end
   return result
 end
 
-local function make_entry(head, body)
-  local entry = {
-    head = head,
+local function parse(out, file, rev)
+  local body = vim.split(out, '\n')
+  -- remove nl at the end
+  body[#body] = nil
+  return {
+    file = file,
+    head = {},
+    rev = rev,
     body = body,
   }
-  for _, line in ipairs(head) do
-    if vim.startswith(line, 'Checking out ') then
-      entry.file = string.sub(line, 14)
-    elseif vim.startswith(line, 'VERS: ') then
-      entry.rev = string.sub(line, 7)
-    end
-  end
-  return entry
 end
 
-local function parse(out)
-  local lines = vim.split(out, '\n')
-  -- remove nl at the end
-  lines[#lines] = nil
-  local result = {}
-  local head
-  local body
-  local function add_entry()
-    if head and body then
-      table.insert(result, make_entry(head, body))
-    end
-    head = nil
-    body = nil
-  end
-  for _, line in ipairs(lines) do
-    if line == '===================================================================' then
-      add_entry()
-      head = {}
-    elseif body then
-      table.insert(body, line)
-    elseif line == '***************' then
-      body = {}
-    elseif head then
-      table.insert(head, line)
-    end
-  end
-  add_entry()
-  return result
-end
-
-return function (file)
-  local out = cvs_up(file)
-  local result = parse(out)
+return function (file, rev)
+  local out = cvs_up(file, rev)
+  local result = parse(out, file, rev)
   return result
 end
