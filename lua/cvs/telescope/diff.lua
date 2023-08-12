@@ -3,7 +3,7 @@ local action_state = require('telescope.actions.state')
 local sorters = require('telescope.sorters')
 local actions = require('telescope.actions')
 local ui_diff = require('cvs.ui.diff')
-local make_finder = require('cvs.telescope.make_finder')
+local make_finder = require('cvs.telescope.make_diff_finder')
 local make_previewer = require('cvs.telescope.make_diff_previewer')
 
 local function diff_file(bufnr)
