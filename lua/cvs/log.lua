@@ -14,7 +14,7 @@ end
 local function cvs_log(files, opts)
   local date_range = opts.date_range
   local authors = opts.authors and table.concat(opts.authors, ',')
-  local cmd = string.format('cvs log %s', table.concat({
+  local cmd = string.format('TZ=UTC cvs log %s', table.concat({
     make_args({date_range}, '-d'),
     make_args({authors}, '-r'),
     make_args(files),
