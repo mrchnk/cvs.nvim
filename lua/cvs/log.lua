@@ -13,13 +13,16 @@ end
 
 local function cvs_log(files, opts)
   local date_range = opts.date_range
-  local authors = opts.authors and table.concat(opts.authors, ',')
+  local author = opts.author and table.concat(opts.author, ',')
   local cmd = string.format('TZ=UTC cvs log %s', table.concat({
-    make_args({date_range}, '-d'),
-    make_args({authors}, '-r'),
+    date_range and string.format('-d "%s"', date_range) or '',
+    author and string.format('-w%s', author) or '',
     make_args(files),
   }, ' '))
   local out = vim.fn.system(cmd)
+  if vim.v.shell_error > 0 then
+    error(out)
+  end
   return out
 end
 
