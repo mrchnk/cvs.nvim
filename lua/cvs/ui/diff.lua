@@ -3,6 +3,14 @@ local cvs_up = require('cvs.up')
 local _win_left
 local _win_right
 
+local function is_win_valid(win)
+  return win and vim.api.nvim_win_is_valid(win)
+end
+
+local function is_ui_valid()
+  return is_win_valid(_win_left) and is_win_valid(_win_right)
+end
+
 local function open_buffer(name, body)
   local bufnr = vim.fn.bufnr(name)
   if bufnr > 0 then
@@ -45,8 +53,34 @@ local function open(entry)
   end
 end
 
+local function from_diff(entry)
+  local file = entry.file
+  local left
+  local right
+  if entry.rev2 then
+    left = cvs_up(file, entry.rev1)
+    right = cvs_up(file, entry.rev2)
+  elseif entry.rev1 then
+    left = cvs_up(file, entry.rev1)
+    right = {file = file}
+  else
+    left = {file = file, rev = "UNVERSIONED", body = {}}
+    right = {file = file}
+  end
+  return left, right
+end
+
 return function (left, right)
+  if not right then
+    left, right = from_diff(left)
+  end
   local buf_left = open(left)
   local buf_right = open(right)
-  open_tab(buf_left, buf_right)
+  if is_ui_valid() then
+    vim.api.nvim_win_set_buf(_win_left, buf_left)
+    vim.api.nvim_win_set_buf(_win_right, buf_right)
+  else
+    open_tab(buf_left, buf_right)
+  end
 end
+
