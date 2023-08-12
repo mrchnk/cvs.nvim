@@ -1,11 +1,22 @@
-local function escape_filename(name)
-  return string.format('"%s"', name)
+local function make_args(tbl, prefix)
+  if not tbl or #tbl == 0 then
+    return ''
+  end
+  return table.concat(vim.tbl_map(function (value)
+    if prefix then
+      return string.format('%s "%s"', prefix, value)
+    else
+      return string.format('"%s"', value)
+    end
+  end, tbl), ' ')
 end
 
 local function cvs_diff(files, flags)
-  local files_str = table.concat(vim.tbl_map(escape_filename, files), " ")
+  local files_str = make_args(files)
+  local revs = make_args(flags.rev, '-r')
+  local dates = make_args(flags.date, '-D')
   local context = flags.context or 3
-  local cmd = string.format('cvs -n diff -U %s -N %s', context, files_str)
+  local cmd = string.format('cvs -n diff -N -U %s %s %s %s', context, revs, dates, files_str)
   local result = vim.fn.system(cmd)
   if vim.v.shell_error == 0 then
     error('No changes found')
