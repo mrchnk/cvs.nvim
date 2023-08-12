@@ -1,5 +1,12 @@
-local function cvs_diff(opts)
-  local result = vim.fn.system('cvs -n diff -U 3 -N')
+local function escape_filename(name)
+  return string.format('"%s"', name)
+end
+
+local function cvs_diff(files, flags)
+  local files_str = table.concat(vim.tbl_map(escape_filename, files), " ")
+  local context = flags.context or 3
+  local cmd = string.format('cvs -n diff -U %s -N %s', context, files_str)
+  local result = vim.fn.system(cmd)
   if vim.v.shell_error == 0 then
     error('No changes found')
   end
@@ -66,8 +73,8 @@ local function parse(diff)
   return result
 end
 
-return function (opts)
-  local out = cvs_diff(opts)
+return function (files, flags)
+  local out = cvs_diff(files, flags)
   local result = parse(out)
   return result
 end
