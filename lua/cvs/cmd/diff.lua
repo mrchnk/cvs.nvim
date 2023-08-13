@@ -4,8 +4,7 @@ local telescope_diff = require('cvs.telescope.diff')
 local parse_args = require('cvs.cmd.parse_args')
 
 local function is_file(name)
-  vim.fn.system(string.format('test -f "%s"', name))
-  return vim.v.shell_error == 0
+  return vim.fn.filereadable(name) == 1
 end
 
 return function (command_options)
