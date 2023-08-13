@@ -97,7 +97,6 @@ local function make_cmd_finder(files, opts)
       _opts.date_range = string.format('%s day ago<=%s day ago', day, day-1)
     end
     local log = cvs_log(files, _opts)
-    vim.print(files, _opts, log)
     for _, v in ipairs(make_commits_log(log)) do
       local entry = make_entry(v)
       idx = idx + 1
@@ -113,7 +112,6 @@ local function make_cmd_finder(files, opts)
       elseif have_commit(file.commits, '1.1') then
         files_done[file.file] = true
       else
-        vim.print(file.file)
         finish = false
       end
     end
@@ -138,8 +136,8 @@ local function make_cmd_finder(files, opts)
         started = true
         vim.schedule(run)
       else
-        for _, v in ipairs(results) do
-          process_result(v)
+        for _, entry in ipairs(results) do
+          process_result(entry)
         end
       end
       if finished then
