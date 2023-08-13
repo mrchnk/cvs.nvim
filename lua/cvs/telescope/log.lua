@@ -12,9 +12,9 @@ local function attach_mappings(self, map)
   return true
 end
 
-return function (log)
+return function (opts)
   pickers.new{
-    finder = make_finder(log),
+    finder = make_finder(opts),
     sorter = make_sorter(),
     previewer = make_previewer(),
     attach_mappings = attach_mappings,
