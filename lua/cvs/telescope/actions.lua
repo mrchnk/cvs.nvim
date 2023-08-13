@@ -30,11 +30,11 @@ local function diff_commit(bufnr)
     return file.file
   end, entry.value.files)
   local ts = entry.value.ts
-  local date = {
-    os.date('%Y-%m-%d %H:%M:%S +0000', ts-1),
-    os.date('%Y-%m-%d %H:%M:%S +0000', ts),
+  local rev_date = {
+    os.date('-D "%Y-%m-%d %H:%M:%S +0000"', ts-1),
+    os.date('-D "%Y-%m-%d %H:%M:%S +0000"', ts),
   }
-  local diff = cvs_diff(files, { date = date })
+  local diff = cvs_diff(files, { rev_date = rev_date })
   local picker = action_state.get_current_picker(bufnr)
   local telescope_diff = require('cvs.telescope.diff')
   telescope_diff(diff, function ()
