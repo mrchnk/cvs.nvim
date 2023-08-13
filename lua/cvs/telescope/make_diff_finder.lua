@@ -15,12 +15,24 @@ local function match(diff_entry, prompt)
   return file_match or #matches > 0, matches
 end
 
+local function change(e)
+  if e.rev1 and e.rev2 then
+    return 'M'
+  elseif e.rev1 then
+    return 'D'
+  elseif e.rev2 then
+    return 'A'
+  else
+    return '?'
+  end
+end
+
 local function make_entry(diff_entry, matches)
   return {
     value = diff_entry,
     filename = diff_entry.file,
     ordinal = diff_entry.file,
-    display = diff_entry.file,
+    display = change(diff_entry) .. ' ' .. diff_entry.file,
     matches = matches,
   }
 end
