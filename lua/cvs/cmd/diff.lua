@@ -8,9 +8,9 @@ local function is_file(name)
   return vim.v.shell_error == 0
 end
 
-return function (opts)
-  local files, flags = parse_args(opts.args)
-  local diff_results = cvs_diff(files, flags)
+return function (command_options)
+  local files, opts = parse_args(command_options.args)
+  local diff_results = cvs_diff(files, opts)
   if #files == 1 and is_file(files[1]) then
     ui_diff(diff_results[1])
   else

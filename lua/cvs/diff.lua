@@ -11,10 +11,10 @@ local function make_args(tbl, prefix)
   end, tbl), ' ')
 end
 
-local function cvs_diff(files, flags)
+local function cvs_diff(files, opts)
   local cmd = string.format('cvs -n diff -N -U %s', table.concat({
-    flags.context or 3,
-    flags.rev_date and table.concat(flags.rev_date, ' ') or '',
+    opts.context or 3,
+    opts.rev_date and table.concat(opts.rev_date, ' ') or '',
     make_args(files)
   }, ' '))
   local result = vim.fn.system(cmd)
@@ -84,8 +84,8 @@ local function parse(diff)
   return result
 end
 
-return function (files, flags)
-  local out = cvs_diff(files, flags)
+return function (files, opts)
+  local out = cvs_diff(files, opts)
   local result = parse(out)
   return result
 end
