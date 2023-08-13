@@ -1,3 +1,6 @@
+local FILE_SEP = '============================================================================='
+local COMMIT_SEP = '----------------------------'
+
 local function make_args(tbl, prefix)
   if not tbl or #tbl == 0 then
     return ''
@@ -14,16 +17,16 @@ end
 local function cvs_log(files, opts)
   local date_range = opts.date_range
   local author = opts.author and table.concat(opts.author, ',')
-  local cmd = string.format('TZ=UTC cvs log %s', table.concat({
+  local cmd = string.format('TZ=UTC cvs log %s 2>/dev/null', table.concat({
     date_range and string.format('-d "%s"', date_range) or '',
     author and string.format('-w%s', author) or '',
     make_args(files),
   }, ' '))
-  local out = vim.fn.system(cmd)
+  local lines = vim.fn.systemlist(cmd)
   if vim.v.shell_error > 0 then
-    error(out)
+    error(lines[1])
   end
-  return out
+  return lines
 end
 
 local function make_entry(head, commits)
@@ -59,7 +62,7 @@ local function make_commit(lines)
   return commit
 end
 
-local function parse(log)
+local function parse(lines)
   local result = {}
   local head = {}
   local commits = {}
@@ -73,16 +76,14 @@ local function parse(log)
     end
     table.insert(commits, make_commit(commit))
   end
-  for line in vim.gsplit(log, '\n') do
-    if vim.startswith(line, 'cvs log:') then
-      -- verbose
-    elseif line == '=============================================================================' then
+  for _, line in ipairs(lines) do
+    if line == FILE_SEP then
       add_commit()
       add_entry()
       commit = nil
       commits = {}
       head = {}
-    elseif line == '----------------------------' then
+    elseif line == COMMIT_SEP then
       add_commit()
       commit = {}
     elseif commit then
@@ -95,8 +96,8 @@ local function parse(log)
 end
 
 return function (files, opts)
-  local log = cvs_log(files, opts)
-  local result = parse(log)
+  local lines = cvs_log(files, opts)
+  local result = parse(lines)
   return result
 end
 

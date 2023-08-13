@@ -1,3 +1,5 @@
+local FILE_SEP = '==================================================================='
+
 local function make_args(tbl, prefix)
   if not tbl or #tbl == 0 then
     return ''
@@ -12,16 +14,17 @@ local function make_args(tbl, prefix)
 end
 
 local function cvs_diff(files, opts)
-  local cmd = string.format('cvs -n diff -N -U %s', table.concat({
-    opts.context or 3,
+  local cmd = string.format('TZ=UTC cvs -n diff %s 2>/dev/null', table.concat({
+    '-N',
+    make_args({opts.context or 3}, '-U'),
     opts.rev_date and table.concat(opts.rev_date, ' ') or '',
     make_args(files)
   }, ' '))
-  local result = vim.fn.system(cmd)
+  local lines = vim.fn.systemlist(cmd)
   if vim.v.shell_error == 0 then
     error('No changes found')
   end
-  return result
+  return lines
 end
 
 local function make_entry(file, head, body)
@@ -41,17 +44,14 @@ local function make_entry(file, head, body)
   end
   return {
     file = file,
-    head = head,
-    body = body,
     rev1 = rev1,
     rev2 = rev2,
+    head = head,
+    body = body,
   }
 end
 
-local function parse(diff)
-  local lines = vim.split(diff, '\n')
-  -- trim last line
-  lines[#lines] = nil
+local function parse(lines)
   local result = {}
   local file
   local head
@@ -65,9 +65,7 @@ local function parse(diff)
     end
   end
   for _, line in ipairs(lines) do
-    if vim.startswith(line, 'cvs diff: ') then
-      -- extra output
-    elseif vim.startswith(line, 'Index: ') then
+    if vim.startswith(line, 'Index: ') then
       add_entry()
       file = string.sub(line, 8)
     elseif body then
@@ -76,7 +74,7 @@ local function parse(diff)
       body = {line}
     elseif head then
       table.insert(head, line)
-    elseif line == '===================================================================' then
+    elseif line == FILE_SEP then
       head = {}
     end
   end
@@ -85,7 +83,7 @@ local function parse(diff)
 end
 
 return function (files, opts)
-  local out = cvs_diff(files, opts)
-  local result = parse(out)
+  local lines = cvs_diff(files, opts)
+  local result = parse(lines)
   return result
 end
