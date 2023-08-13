@@ -1,7 +1,6 @@
 local pickers = require('telescope.pickers')
 local action_state = require('telescope.actions.state')
 local ui_diff = require('cvs.ui.diff')
-local cvs_diff = require('cvs.diff')
 
 local function diff_file(bufnr)
   local picker = action_state.get_current_picker(bufnr)
@@ -17,7 +16,7 @@ local function revert_file(bufnr)
   vim.cmd(string.format('!cvs up -C "%s"', file))
 end
 
-local function resume_picker(picker)
+local function _resume_picker(picker)
   -- this function is messing with telescope internals, may cause bugs in future
   picker.get_window_options = nil
   picker.layout_strategy = nil
@@ -34,17 +33,20 @@ local function diff_commit(bufnr)
     os.date('-D "%Y-%m-%d %H:%M:%S +0000"', ts-1),
     os.date('-D "%Y-%m-%d %H:%M:%S +0000"', ts),
   }
-  local diff = cvs_diff(files, { rev_date = rev_date })
   local picker = action_state.get_current_picker(bufnr)
   local telescope_diff = require('cvs.telescope.diff')
-  telescope_diff(diff, function ()
-    resume_picker(picker)
-  end)
+  telescope_diff{
+    files = files,
+    opts = { rev_date = rev_date },
+    go_back = function ()
+      _resume_picker(picker)
+    end,
+  }
 end
 
 local function go_back(bufnr)
   local picker = action_state.get_current_picker(bufnr)
-  if picker and type(picker._go_back) == 'function' then
+  if picker and picker._go_back then
     picker:_go_back(bufnr)
   end
 end
@@ -65,5 +67,4 @@ return {
   go_back = go_back,
   go_back_backspace = go_back_backspace,
 }
-
 

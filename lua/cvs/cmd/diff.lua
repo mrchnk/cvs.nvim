@@ -9,10 +9,13 @@ end
 
 return function (command_options)
   local files, opts = parse_args(command_options.args)
-  local diff_results = cvs_diff(files, opts)
   if #files == 1 and is_file(files[1]) then
+    local diff_results = cvs_diff(files, opts)
     ui_diff(diff_results[1])
   else
-    telescope_diff(diff_results)
+    telescope_diff{
+      files = files,
+      opts = opts,
+    }
   end
 end

@@ -50,9 +50,9 @@ local function highlighter(_, prompt, display)
   local highlights = {}
   local lo_display = string.lower(display)
   for word in vim.gsplit(string.lower(prompt), '%s+', {trimempty=true}) do
-    local hl_start, hl_end = string.find(lo_display, word, 1, true)
-    if hl_start then
-      table.insert(highlights, { start = hl_start, finish = hl_end })
+    local start, finish = string.find(lo_display, word, 1, true)
+    if start then
+      table.insert(highlights, { start = start, finish = finish })
     end
   end
   return highlights
