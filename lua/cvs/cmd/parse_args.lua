@@ -1,13 +1,28 @@
-local function iterator(tbl)
-  local i = 0
-  return function ()
-    i = i+1
-    return tbl[i]
-  end
-end
-
 local function tokenizer(str)
-  return iterator(vim.split(str, '%s+'))
+  local letters = vim.gsplit(str, '')
+  local function read_until(last, strict)
+    local res = ''
+    for letter in letters do
+      if letter == last then
+        return res
+      else
+        res = res .. letter
+      end
+    end
+    if strict then
+      error(string.format('Malformed arguments: %s missing', last))
+    end
+    return res
+  end
+  return function ()
+    for letter in letters do
+      if letter == '"' or letter == "'" then
+        return read_until(letter, true)
+      elseif letter ~= ' ' then
+        return letter .. read_until(' ')
+      end
+    end
+  end
 end
 
 return function (args)
