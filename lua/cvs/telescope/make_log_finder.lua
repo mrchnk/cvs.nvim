@@ -115,7 +115,7 @@ local function make_cmd_finder(files, opts)
         finish = false
       end
     end
-    if finish or day == 14 then
+    if finish then
       finished = true
       for _, cb in ipairs(callbacks) do
         cb[2]()
