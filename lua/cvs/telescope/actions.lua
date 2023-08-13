@@ -50,8 +50,7 @@ local function go_back(bufnr)
 end
 
 local function go_back_backspace(bufnr)
-  local picker = action_state.get_current_picker(bufnr)
-  if picker:_get_prompt() == '' then
+  if action_state.get_current_line() == '' then
     go_back(bufnr)
   else
     local keys = vim.api.nvim_replace_termcodes("<bs>", true, false, true)

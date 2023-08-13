@@ -1,7 +1,7 @@
 local Previewer = require('telescope.previewers.previewer')
 
 local ns = vim.api.nvim_create_namespace('cvs_telescope_diff')
-local higroup = 'Visual'
+local higroup = 'TelescopePreviewMatch'
 
 local function highlight(buf, matches)
   for _, m in ipairs(matches) do
