@@ -27,25 +27,20 @@ local function cvs_diff(files, opts)
   return lines
 end
 
-local function make_entry(file, head, body)
-  local rev1
-  local rev2
-  for _, line in ipairs(head) do
-    if vim.startswith(line, "retrieving revision ") then
-      local rev = string.sub(line, 21)
-      if rev2 then
-        error('Three revisions diff?')
-      elseif rev1 then
-        rev2 = rev
-      else
-        rev1 = rev
-      end
-    end
+local function get_rev(line)
+  local name, date, rev = unpack(vim.split(line, '\t'))
+  if string.sub(name, 5) == '/dev/null' then
+    return nil
+  else
+    return rev or 'HEAD'
   end
+end
+
+local function make_entry(file, head, body)
   return {
     file = file,
-    rev1 = rev1,
-    rev2 = rev2,
+    rev1 = get_rev(body[2]),
+    rev2 = get_rev(body[3]),
     head = head,
     body = body,
   }

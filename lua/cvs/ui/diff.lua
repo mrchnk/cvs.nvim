@@ -53,20 +53,20 @@ local function open(entry)
   end
 end
 
+local function from(file, rev)
+  if rev == 'HEAD' then
+    return {file = file}
+  elseif rev then
+    return cvs_up(file, rev)
+  else
+    return {file = '/dev/null', rev = '', body = {}}
+  end
+end
+
 local function from_diff(entry)
   local file = entry.file
-  local left
-  local right
-  if entry.rev2 then
-    left = cvs_up(file, entry.rev1)
-    right = cvs_up(file, entry.rev2)
-  elseif entry.rev1 then
-    left = cvs_up(file, entry.rev1)
-    right = {file = file}
-  else
-    left = {file = file, rev = "UNVERSIONED", body = {}}
-    right = {file = file}
-  end
+  local left = from(file, entry.rev1)
+  local right = from(file, entry.rev2)
   return left, right
 end
 
