@@ -6,11 +6,13 @@ local make_previewer = require('cvs.telescope.make_diff_previewer')
 local cvs_actions = require("cvs.telescope.actions")
 
 local function attach_mappings(self, map)
-  map('i', '<C-d>', cvs_actions.diff_file)
-  map('i', '<C-r>', cvs_actions.revert_file)
-  map('i', '<C-l>', cvs_actions.go_back)
-  map('i', '<C-j>', actions.preview_scrolling_down)
-  map('i', '<C-k>', actions.preview_scrolling_up)
+  local modes = {'i', 'n'}
+  map(modes, '<bs>', cvs_actions.go_back_backspace)
+  map(modes, '<C-d>', cvs_actions.diff_file)
+  map(modes, '<C-r>', cvs_actions.revert_file)
+  map(modes, '<C-g>', cvs_actions.go_back)
+  map(modes, '<C-j>', actions.preview_scrolling_down)
+  map(modes, '<C-k>', actions.preview_scrolling_up)
   return true
 end
 

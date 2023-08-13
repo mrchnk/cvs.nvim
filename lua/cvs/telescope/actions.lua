@@ -49,10 +49,22 @@ local function go_back(bufnr)
   end
 end
 
+local function go_back_backspace(bufnr)
+  local picker = action_state.get_current_picker(bufnr)
+  if picker:_get_prompt() == '' then
+    go_back(bufnr)
+  else
+    local keys = vim.api.nvim_replace_termcodes("<bs>", true, false, true)
+    vim.api.nvim_feedkeys(keys, "tn", false)
+  end
+end
+
 return {
   diff_file = diff_file,
   revert_file = revert_file,
   diff_commit = diff_commit,
   go_back = go_back,
+  go_back_backspace = go_back_backspace,
 }
+
 
