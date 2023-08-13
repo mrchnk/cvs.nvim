@@ -33,13 +33,13 @@ return function (args)
     opt = nil
     return true
   end
-  local function push_opt(name)
+  local function push_opt(name, template)
+    local value = template and string.format(template, opt) or opt
     if opts[name] then
-      table.insert(opts[name], opt)
+      table.insert(opts[name], value)
     else
-      opts[name] = {opt}
+      opts[name] = {value}
     end
-    opt = nil
     return true
   end
   local function push_file(name)
@@ -54,8 +54,8 @@ return function (args)
     read_opt(token, '-U') and set_opt('context') or
     read_opt(token, '-d') and set_opt('date_range') or
     read_opt(token, '-A') and push_opt('author') or
-    read_opt(token, '-r') and push_opt('rev') or
-    read_opt(token, '-D') and push_opt('date') or
+    read_opt(token, '-r') and push_opt('rev') and push_opt('rev_date', '-r "%s"') or
+    read_opt(token, '-D') and push_opt('date') and push_opt('rev_date', '-D "%s"') or
     push_file(token)
   end
   return files, opts

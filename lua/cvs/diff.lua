@@ -12,11 +12,11 @@ local function make_args(tbl, prefix)
 end
 
 local function cvs_diff(files, flags)
-  local files_str = make_args(files)
-  local revs = make_args(flags.rev, '-r')
-  local dates = make_args(flags.date, '-D')
-  local context = flags.context or 3
-  local cmd = string.format('cvs -n diff -N -U %s %s %s %s', context, revs, dates, files_str)
+  local cmd = string.format('cvs -n diff -N -U %s', table.concat({
+    flags.context or 3,
+    flags.rev_date and table.concat(flags.rev_date, ' ') or '',
+    make_args(files)
+  }, ' '))
   local result = vim.fn.system(cmd)
   if vim.v.shell_error == 0 then
     error('No changes found')
