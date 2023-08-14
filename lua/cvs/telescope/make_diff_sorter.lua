@@ -19,7 +19,7 @@ local function match_entry(prompt, entry)
   local file = entry.value.file
   local body = entry.value.body
   for word in vim.gsplit(lo_prompt, '%s+', {trimempty=true}) do
-    local found = some_str_find(word, body, 3) or
+    local found = some_str_find(word, body, 4) or
       fzy.has_match(word, file)
     if not found then
       return false

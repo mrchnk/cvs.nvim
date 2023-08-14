@@ -10,7 +10,7 @@ local function format_entry(entry, prompt)
   if #prompt > 0 then
     local body = entry.value.body
     local lo_prompt = string.lower(prompt)
-    for i = 3, #body do
+    for i = 4, #body do
       local lo_line = string.lower(body[i])
       for pos, len in find_words(lo_prompt, lo_line) do
         table.insert(matches, {i, pos, len})
