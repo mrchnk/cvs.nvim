@@ -45,7 +45,6 @@ return function (args)
   end
   local function set_opt(name)
     opts[name] = opt
-    opt = nil
     return true
   end
   local function push_opt(name, template)
