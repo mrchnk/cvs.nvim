@@ -29,35 +29,32 @@ end
 
 local function make_commits_log(log)
   local map = {}
-  local result = {}
-  local function add(commit, log_entry)
-    local id = commit.commitid
-    local entry
-    if map[id] then
-      entry = map[id]
-    else
-      entry = {
-        title = commit.title,
-        message = commit.message,
-        date = commit.date,
-        author = commit.author,
-        ts = ts(commit.date),
-        files = {}
-      }
-      map[id] = entry
-      table.insert(result, entry)
-    end
-    table.insert(entry.files, {
-      file = log_entry.file,
-      rev = commit.rev,
-    })
-  end
+  local results = {}
   for _, log_entry in ipairs(log) do
     for _, commit in ipairs(log_entry.commits) do
-      add(commit, log_entry)
+      local id = commit.commitid
+      local entry
+      if map[id] then
+        entry = map[id]
+      else
+        entry = {
+          title = commit.title,
+          message = commit.message,
+          date = commit.date,
+          author = commit.author,
+          ts = ts(commit.date),
+          files = {}
+        }
+        map[id] = entry
+        table.insert(results, entry)
+      end
+      table.insert(entry.files, {
+        file = log_entry.file,
+        rev = commit.rev,
+      })
     end
   end
-  return result
+  return results
 end
 
 local function make_table_finder(results)
