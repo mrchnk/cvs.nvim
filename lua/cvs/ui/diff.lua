@@ -54,15 +54,15 @@ end
 
 local function from(file, rev)
   if rev == 'HEAD' then
-    return {file = file}
+    return open_file(file)
   elseif rev then
-    return cvs_up(file, rev)
+    return open(cvs_up(file, rev))
   else
-    return {file = '/dev/null', rev = '', body = {}}
+    return open_buffer('/dev/null', {})
   end
 end
 
-local function from_diff(entry)
+local function open_diff(entry)
   local file = entry.file
   local left = from(file, entry.rev1)
   local right = from(file, entry.rev2)
@@ -70,11 +70,14 @@ local function from_diff(entry)
 end
 
 return function (left, right)
+  local buf_left
+  local buf_right
   if not right then
-    left, right = from_diff(left)
+    buf_left, buf_right = open_diff(left)
+  else
+    buf_left = open(left)
+    buf_right = open(right)
   end
-  local buf_left = open(left)
-  local buf_right = open(right)
   if is_ui_valid() then
     vim.api.nvim_win_set_buf(_win_left, buf_left)
     vim.api.nvim_win_set_buf(_win_right, buf_right)
