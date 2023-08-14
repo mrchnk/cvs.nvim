@@ -18,8 +18,7 @@ local function open_buffer(name, body)
   end
   bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(bufnr, name)
-  local size = vim.api.nvim_buf_line_count(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, size, true, body)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, body)
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
   return bufnr
 end
