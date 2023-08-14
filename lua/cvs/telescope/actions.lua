@@ -1,12 +1,11 @@
 local pickers = require('telescope.pickers')
+local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
 local ui_diff = require('cvs.ui.diff')
 
 local function diff_file(bufnr)
-  local picker = action_state.get_current_picker(bufnr)
   local entry = action_state.get_selected_entry()
-  pickers.on_close_prompt(bufnr)
-  vim.api.nvim_set_current_win(picker.original_win_id)
+  actions.close(bufnr)
   ui_diff(entry.value)
 end
 
@@ -18,8 +17,10 @@ end
 
 local function _resume_picker(picker)
   -- this function is messing with telescope internals, may cause bugs in future
+  picker.previewer.state = nil
   picker.get_window_options = nil
   picker.layout_strategy = nil
+  picker:clear_completion_callbacks()
   pickers.new({}, picker):find()
 end
 

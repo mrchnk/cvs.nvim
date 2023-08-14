@@ -50,14 +50,15 @@ local function on_picker_complete(self)
   end
 end
 
+
 return function (opts)
-  return Previewer:new{
+  local previewer = Previewer:new{
     setup = function (self, status)
       local buf = vim.api.nvim_create_buf(false, true)
+      status.picker:register_completion_callback(on_picker_complete)
       if opts.setup_buf then
         opts.setup_buf(buf)
       end
-      status.picker:register_completion_callback(on_picker_complete)
       return {
         buf = buf,
         format_entry = opts.format_entry,
@@ -70,4 +71,5 @@ return function (opts)
     preview_fn = preview_fn,
     scroll_fn = scroll_fn,
   }
+  return previewer
 end
