@@ -152,12 +152,8 @@ return function (finder_opts)
   else
     local files = finder_opts.files or {}
     local opts = finder_opts.opts or {}
-    if opts.date_range then
-      local results = cvs_log(files, opts)
-      return make_table_finder(results)
-    else
-      return make_cmd_finder(files, opts)
-    end
+    local results = cvs_log(files, opts)
+    return make_table_finder(results)
   end
 end
 
