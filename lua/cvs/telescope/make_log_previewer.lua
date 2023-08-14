@@ -38,9 +38,9 @@ local function format_entry(entry, prompt)
     end
   end
   table.insert(lines, '')
-  local max_file_len = math.max(unpack(vim.tbl_map(function (file)
+  local max_file_len = math.min(99, math.max(1, unpack(vim.tbl_map(function (file)
     return #file.file
-  end, files)))
+  end, files))))
   for _, file in ipairs(files) do
     table.insert(lines, string.format('  %-' .. max_file_len .. 's  -r%s', file.file, file.rev))
     for _, pos in ipairs(fzy.positions(prompt, file.file)) do
