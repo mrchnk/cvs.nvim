@@ -6,9 +6,10 @@ local make_sorter = require('cvs.telescope.make_log_sorter')
 local cvs_actions = require("cvs.telescope.actions")
 
 local function attach_mappings(self, map)
+  local modes = {'i', 'n'}
   actions.select_default:replace(cvs_actions.diff_commit)
-  map('i', '<C-j>', actions.preview_scrolling_down)
-  map('i', '<C-k>', actions.preview_scrolling_up)
+  map(modes, '<C-J>', actions.preview_scrolling_down)
+  map(modes, '<C-K>', actions.preview_scrolling_up)
   return true
 end
 
