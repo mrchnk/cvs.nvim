@@ -1,58 +1,46 @@
 local sorters = require('telescope.sorters')
-local fzy = require('telescope.algos.fzy')
+local find_words = require('cvs.util.find_words')
+local some_str_find = require('cvs.util.some_str_find')
+local some_fzy_match = require('cvs.util.some_fzy_match')
 
 local function scoring_fn(self, prompt, ordinal, entry)
   return 1/entry.value.ts
 end
 
-local function find_word(word, message)
-  for _, line in ipairs(message) do
-    if string.find(string.lower(line), word) then
-      return true
-    end
-  end
-  return false
-end
-
-local function match_message(prompt, message)
-  for word in vim.gsplit(string.lower(prompt), '%s+', {trimempty=true}) do
-    if not find_word(word, message) then
+local function match_entry(prompt, entry)
+  local lo_prompt = string.lower(prompt)
+  local message = entry.value.message
+  local files = entry.value.files
+  local lo_author = string.lower(entry.value.author)
+  for word in vim.gsplit(lo_prompt, '%s+', {trimempty=true}) do
+    local found = word == lo_author or
+      some_str_find(word, message) or
+      some_fzy_match(word, files)
+    if not found then
       return false
     end
   end
   return true
 end
 
-local function match_files(prompt, files)
-  for _, file in ipairs(files) do
-    if fzy.has_match(prompt, file.file) then
-      return true
-    end
-  end
-  return false
-end
-
 local function filter_fn(self, prompt, entry)
   if #prompt == 0 then
     return 1, prompt
   end
-  local message = entry.value.message
-  local files = entry.value.files
-  local author = entry.value.author
-  local match = prompt == author or
-    match_message(prompt, message) or
-    match_files(prompt, files)
+  local match = match_entry(prompt, entry)
   return match and 1 or -1, prompt
 end
 
-
 local function highlighter(_, prompt, display)
   local highlights = {}
-  local lo_display = string.lower(display)
-  for word in vim.gsplit(string.lower(prompt), '%s+', {trimempty=true}) do
-    local start, finish = string.find(lo_display, word, 1, true)
-    if start then
-      table.insert(highlights, { start = start, finish = finish })
+  if #prompt > 0 then
+    local lo_display = string.lower(display)
+    local lo_prompt = string.lower(prompt)
+    for pos, len in find_words(lo_prompt, lo_display) do
+      table.insert(highlights, {
+        start = pos,
+        finish = pos + len - 1,
+      })
     end
   end
   return highlights

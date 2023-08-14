@@ -1,29 +1,19 @@
 local make_buf_previewer = require('cvs.telescope.make_buf_previewer')
+local find_words = require('cvs.util.find_words')
 
-local function find_words(prompt, line)
-  local words = vim.gsplit(prompt, '%s+', {trimempty=true})
-  local word = words()
-  local pos = 0
-  return function ()
-    while word do
-      pos = string.find(line, word, pos+1)
-      if pos then
-        return pos, #word
-      end
-      word = words()
-      pos = 0
-    end
-  end
+local function setup_buf(buf)
+  vim.api.nvim_buf_set_option(buf, 'syntax', 'diff')
 end
 
 local function format_entry(entry, prompt)
   local matches = {}
   if #prompt > 0 then
-    for i, line in ipairs(entry.value.body) do
-      if i > 3 then
-        for pos, len in find_words(prompt, line) do
-          table.insert(matches, {i, pos, len})
-        end
+    local body = entry.value.body
+    local lo_prompt = string.lower(prompt)
+    for i = 3, #body do
+      local lo_line = string.lower(body[i])
+      for pos, len in find_words(lo_prompt, lo_line) do
+        table.insert(matches, {i, pos, len})
       end
     end
   end
@@ -32,9 +22,8 @@ end
 
 return function ()
   return make_buf_previewer{
-    setup_buf = function (buf)
-      vim.api.nvim_buf_set_option(buf, 'syntax', 'diff')
-    end,
+    setup_buf = setup_buf,
     format_entry = format_entry,
   }
 end
+

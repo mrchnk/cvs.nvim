@@ -1,5 +1,6 @@
 local sorters = require('telescope.sorters')
 local fzy = require('telescope.algos.fzy')
+local some_str_find = require('cvs.util.some_str_find')
 local OFFSET = -fzy.get_score_floor()
 
 local function scoring_fn(self, prompt, line, entry)
@@ -13,18 +14,14 @@ local function scoring_fn(self, prompt, line, entry)
   return 1 / (fzy_score + OFFSET)
 end
 
-local function _find_word(word, body)
-  for i, line in ipairs(body) do
-    if i > 3 and string.find(string.lower(line), word) then
-      return true
-    end
-  end
-  return false
-end
-
-local function _match_diff(prompt, body)
-  for word in vim.gsplit(string.lower(prompt), '%s+', {trimempty=true}) do
-    if not _find_word(word, body) then
+local function match_entry(prompt, entry)
+  local lo_prompt = string.lower(prompt)
+  local file = entry.value.file
+  local body = entry.value.body
+  for word in vim.gsplit(lo_prompt, '%s+', {trimempty=true}) do
+    local found = some_str_find(word, body, 3) or
+      fzy.has_match(word, file)
+    if not found then
       return false
     end
   end
@@ -35,15 +32,13 @@ local function filter_fn(self, prompt, entry)
   if #prompt == 0 then
     return 1, prompt
   end
-  local file = entry.value.file
-  local body = entry.value.body
-  local match = fzy.has_match(prompt, file) or
-    _match_diff(prompt, body)
+  local match = match_entry(prompt, entry)
   return match and 1 or -1, prompt
 end
 
 local function highlighter(_, prompt, display)
   local highlights = {}
+  -- every display begins with status symbol + space
   local file = string.sub(display, 3)
   for _, pos in ipairs(fzy.positions(prompt, file)) do
     table.insert(highlights, pos+2)
