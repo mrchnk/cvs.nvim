@@ -23,7 +23,7 @@ return function (opts)
     previewer = make_previewer(),
     attach_mappings = attach_mappings,
   }
-  picker._go_back = opts.go_back
+  picker._cvs_opts = opts
   picker:find()
 end
 
