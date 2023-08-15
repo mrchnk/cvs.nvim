@@ -36,14 +36,24 @@ local function filter_fn(self, prompt, entry)
   return match and 1 or -1, prompt
 end
 
-local function highlighter(_, prompt, display)
-  local highlights = {}
+local function get_fzy_highlight(prompt, display)
   -- every display begins with status symbol + space
   local file = string.sub(display, 3)
-  for _, pos in ipairs(fzy.positions(prompt, file)) do
-    table.insert(highlights, pos+2)
+  for word in vim.gsplit(prompt, '%s+', {trimempty=true}) do
+    if fzy.has_match(word, file) then
+      return vim.tbl_map(function (pos)
+        return pos + 2
+      end, fzy.positions(word, file))
+    end
   end
-  return highlights
+end
+
+local function highlighter(_, prompt, display)
+  if #prompt > 0 then
+    return get_fzy_highlight(prompt, display)
+  else
+    return {}
+  end
 end
 
 return function ()
