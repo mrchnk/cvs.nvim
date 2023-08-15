@@ -7,7 +7,8 @@ local cvs_actions = require("cvs.telescope.actions")
 
 local function attach_mappings(self, map)
   local modes = {'i', 'n'}
-  actions.select_default:replace(cvs_actions.diff_commit)
+  actions.select_default:replace(cvs_actions.open_log_entry)
+  map(modes, '<C-D>', cvs_actions.diff_commits)
   map(modes, '<C-J>', actions.preview_scrolling_down)
   map(modes, '<C-K>', actions.preview_scrolling_up)
   return true
