@@ -2,6 +2,7 @@ local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
 local ui_diff = require('cvs.ui.diff')
+local cvs_revert = require('cvs.revert')
 
 local function diff_file(bufnr)
   local entry = action_state.get_selected_entry()
@@ -10,9 +11,15 @@ local function diff_file(bufnr)
 end
 
 local function revert_file(bufnr)
-  local entry = action_state.get_selected_entry()
-  local file = entry.filename
-  vim.cmd(string.format('!cvs up -C "%s"', file))
+  local picker = action_state.get_current_picker(bufnr)
+  local entries = picker.get_multi_selection()
+  if #entries == 0 then
+     enties = {action_state.get_selected_entry()}
+  end
+  local files = vim.tbl_map(function (entry)
+    return entry.file
+  end, entries)
+  cvs_revert(files)
 end
 
 local function _resume_picker(picker)

@@ -9,8 +9,8 @@ local function attach_mappings(self, map)
   local modes = {'i', 'n'}
   map(modes, '<BS>', cvs_actions.go_back_backspace)
   map(modes, '<C-D>', cvs_actions.diff_file)
-  map(modes, '<C-R>', cvs_actions.revert_file)
   map(modes, '<C-G>', cvs_actions.go_back)
+  map(modes, '<C-R>', cvs_actions.revert_file)
   map(modes, '<C-J>', actions.preview_scrolling_down)
   map(modes, '<C-K>', actions.preview_scrolling_up)
   return true

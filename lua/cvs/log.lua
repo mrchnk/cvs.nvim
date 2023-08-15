@@ -1,18 +1,6 @@
+local make_args = require('cvs.make_args')
 local FILE_SEP = '============================================================================='
 local COMMIT_SEP = '----------------------------'
-
-local function make_args(tbl, prefix)
-  if not tbl or #tbl == 0 then
-    return ''
-  end
-  return table.concat(vim.tbl_map(function (value)
-    if prefix then
-      return string.format('%s "%s"', prefix, value)
-    else
-      return string.format('"%s"', value)
-    end
-  end, tbl), ' ')
-end
 
 local function cvs_log(files, opts)
   local date_range = opts.date_range

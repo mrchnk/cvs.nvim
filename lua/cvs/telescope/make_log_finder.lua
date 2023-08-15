@@ -126,7 +126,6 @@ local function make_cmd_finder(files, opts)
       closed = true
     end,
     results = results,
-    entry_maker = make_entry,
   }, {
     __call = function (_, _, process_result, process_complete)
       if not started then
