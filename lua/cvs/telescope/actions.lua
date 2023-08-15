@@ -12,12 +12,12 @@ end
 
 local function revert_file(bufnr)
   local picker = action_state.get_current_picker(bufnr)
-  local entries = picker.get_multi_selection()
+  local entries = picker:get_multi_selection()
   if #entries == 0 then
-     enties = {action_state.get_selected_entry()}
+     entries = {action_state.get_selected_entry()}
   end
   local files = vim.tbl_map(function (entry)
-    return entry.file
+    return entry.value.file
   end, entries)
   cvs_revert(files)
 end
