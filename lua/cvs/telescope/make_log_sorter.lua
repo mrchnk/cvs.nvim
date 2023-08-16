@@ -12,8 +12,10 @@ local function match_entry(prompt, entry)
   local message = entry.value.message
   local files = entry.value.files
   local lo_author = string.lower(entry.value.author)
+  local date = entry.value.date
   for word in vim.gsplit(lo_prompt, '%s+', {trimempty=true}) do
     local found = word == lo_author or
+      string.find(date, word, 1, true) or
       some_str_find(word, message) or
       some_fzy_match(word, files)
     if not found then

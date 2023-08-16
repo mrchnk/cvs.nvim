@@ -28,8 +28,14 @@ local function format_entry(entry, prompt)
     '',
   }
   local matches = {}
-  if lo_prompt == lo_author then
-    table.insert(matches, {1, 9, #author})
+  for word in vim.gsplit(lo_prompt, '%s+', {trimempty=true}) do
+    if word == lo_author then
+      table.insert(matches, {1, 9, #word})
+    end
+    local pos = string.find(date, word, 1, true)
+    if pos then
+      table.insert(matches, {2, 8 + pos, #word})
+    end
   end
   for _, line in ipairs(message) do
     table.insert(lines, '    ' .. line)
