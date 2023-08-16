@@ -2,6 +2,7 @@ local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
 local ui_diff = require('cvs.ui.diff')
+local ui_commit = require('cvs.ui.commit')
 local cvs_revert = require('cvs.revert')
 
 local function get_rev_date(ts)
@@ -105,6 +106,23 @@ local function go_back_backspace(bufnr)
   end
 end
 
+local function commit_file(bufnr)
+  local picker = action_state.get_current_picker(bufnr)
+  local entries = picker:get_multi_selection()
+  if #entries == 0 then
+     entries = {action_state.get_selected_entry()}
+  end
+  local files = vim.tbl_map(function (entry)
+    return entry.value.file
+  end, entries)
+  actions.close(bufnr)
+  ui_commit(files, {
+    go_back = function ()
+      _resume_picker(picker)
+    end
+  })
+end
+
 return {
   diff_file = diff_file,
   diff_commits = diff_commits,
@@ -112,5 +130,6 @@ return {
   open_log_entry = open_log_entry,
   go_back = go_back,
   go_back_backspace = go_back_backspace,
+  commit_file = commit_file,
 }
 

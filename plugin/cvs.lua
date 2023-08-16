@@ -12,3 +12,9 @@ vim.api.nvim_create_user_command("CVSLog", cmd.log, {
   nargs = '?',
 })
 
+vim.api.nvim_create_user_command('CVSCommit', cmd.commit, {
+  desc = 'Commit changed files',
+  complete = 'file',
+  nargs = '?',
+})
+

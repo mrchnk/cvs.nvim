@@ -1,16 +1,5 @@
 local cvs_up = require('cvs.up')
 
-local _win_left
-local _win_right
-
-local function is_win_valid(win)
-  return win and vim.api.nvim_win_is_valid(win)
-end
-
-local function is_ui_valid()
-  return is_win_valid(_win_left) and is_win_valid(_win_right)
-end
-
 local function open_buffer(name, body)
   local bufnr = vim.fn.bufnr(name)
   if bufnr > 0 then
@@ -29,17 +18,20 @@ local function open_file(file)
 end
 
 local function setup_window(win)
-  vim.cmd.diffthis()
+  vim.api.nvim_win_call(win, function ()
+    vim.cmd.diffthis()
+  end)
   vim.api.nvim_win_set_option(win, 'foldmethod', 'diff')
+  vim.api.nvim_win_set_option(win, 'foldlevel', 0)
 end
 
 local function open_tab(buf_left, buf_right)
   vim.cmd('tab sb' .. buf_right)
-  _win_right = vim.api.nvim_get_current_win()
-  setup_window(_win_right)
+  local win_right = vim.api.nvim_get_current_win()
+  setup_window(win_right)
   vim.cmd('vertical sb' .. buf_left)
-  _win_left = vim.api.nvim_get_current_win()
-  setup_window(_win_left)
+  local win_left = vim.api.nvim_get_current_win()
+  setup_window(win_left)
 end
 
 
@@ -78,11 +70,6 @@ return function (left, right)
     buf_left = open(left)
     buf_right = open(right)
   end
-  if is_ui_valid() then
-    vim.api.nvim_win_set_buf(_win_left, buf_left)
-    vim.api.nvim_win_set_buf(_win_right, buf_right)
-  else
-    open_tab(buf_left, buf_right)
-  end
+  open_tab(buf_left, buf_right)
 end
 
