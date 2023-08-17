@@ -15,7 +15,9 @@ local function _resume_picker(picker)
   picker.get_window_options = nil
   picker.layout_strategy = nil
   picker:clear_completion_callbacks()
-  pickers.new({}, picker):find()
+  local re_picker = pickers.new({}, picker)
+  re_picker._cvs_opts = picker._cvs_opts
+  re_picker:find()
 end
 
 local function _telescope_diff(bufnr, files, opts)
