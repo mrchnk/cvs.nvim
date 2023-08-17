@@ -1,6 +1,7 @@
 local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
+local transform_mod = require('telescope.actions.mt').transform_mod
 local ui_diff = require('cvs.ui.diff')
 local ui_commit = require('cvs.ui.commit')
 local cvs_revert = require('cvs.revert')
@@ -99,6 +100,16 @@ local function go_back(bufnr)
   end
 end
 
+local function go_back_or_close(bufnr)
+  local picker = action_state.get_current_picker(bufnr)
+  local opts = picker._cvs_opts or {}
+  if opts.go_back then
+    opts.go_back(bufnr)
+  else
+    actions.close(bufnr)
+  end
+end
+
 local function go_back_backspace(bufnr)
   if action_state.get_current_line() == '' then
     go_back(bufnr)
@@ -125,13 +136,14 @@ local function commit_file(bufnr)
   })
 end
 
-return {
+return transform_mod{
   diff_file = diff_file,
   diff_commits = diff_commits,
   revert_file = revert_file,
   open_log_entry = open_log_entry,
   go_back = go_back,
   go_back_backspace = go_back_backspace,
+  go_back_or_close = go_back_or_close,
   commit_file = commit_file,
 }
 

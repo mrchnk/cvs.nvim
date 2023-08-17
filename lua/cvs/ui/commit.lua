@@ -36,7 +36,7 @@ local function ask_commit_message(msg, cb, opts)
   }
   local win
   local committed = false
-  local function callback()
+  local function complete()
     if committed then
       return
     end
@@ -53,8 +53,8 @@ local function ask_commit_message(msg, cb, opts)
     cb(message)
     committed = true
   end
-  vim.api.nvim_buf_set_keymap(buf, 'i', '<C-CR>', '', {callback = callback})
-  vim.api.nvim_buf_set_keymap(buf, 'n', '<C-CR>', '', {callback = callback})
+  vim.api.nvim_buf_set_keymap(buf, 'i', '<C-A>c', '', {callback = complete})
+  vim.api.nvim_buf_set_keymap(buf, 'n', '<C-A>c', '', {callback = complete})
   vim.api.nvim_buf_set_keymap(buf, 'n', '<ESC>', '', {
     callback = function()
       vim.api.nvim_win_close(win, true)
