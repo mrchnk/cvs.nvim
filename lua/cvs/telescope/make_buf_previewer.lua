@@ -68,9 +68,11 @@ return function (opts)
       }
     end,
     teardown = function (self, status)
-      local buf = self.state.buf
-      vim.api.nvim_buf_delete(buf, {force = true})
-      self.state = nil
+      if self.state then
+        local buf = self.state.buf
+        vim.api.nvim_buf_delete(buf, {force = true})
+        self.state = nil
+      end
     end,
     preview_fn = preview_fn,
     scroll_fn = scroll_fn,
