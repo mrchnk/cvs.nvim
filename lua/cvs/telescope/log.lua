@@ -21,7 +21,11 @@ return function (opts)
     previewer = make_previewer(),
     attach_mappings = attach_mappings,
   }
-  picker._cvs_opts = opts
+  picker._cvs_opts = {
+    results = opts.results,
+    files = opts.files,
+    opts = opts.opts,
+  }
   picker:find()
 end
 

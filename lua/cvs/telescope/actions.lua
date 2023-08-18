@@ -1,6 +1,7 @@
 local pickers = require('telescope.pickers')
 local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
+local builtin = require('telescope.builtin')
 local transform_mod = require('telescope.actions.mt').transform_mod
 local ui_diff = require('cvs.ui.diff')
 local ui_commit = require('cvs.ui.commit')
@@ -10,26 +11,12 @@ local function get_rev_date(ts)
   return os.date('-D "%Y-%m-%d %H:%M:%S +0000"', ts)
 end
 
-local function _resume_picker(picker)
-  -- this function is messing with telescope internals, may cause bugs in future
-  picker.previewer.state = nil
-  picker.get_window_options = nil
-  picker.layout_strategy = nil
-  picker:clear_completion_callbacks()
-  local re_picker = pickers.new({}, picker)
-  re_picker._cvs_opts = picker._cvs_opts
-  re_picker:find()
-end
-
 local function _telescope_diff(bufnr, files, opts)
-  local picker = action_state.get_current_picker(bufnr)
   local telescope_diff = require('cvs.telescope.diff')
   telescope_diff{
     files = files,
     opts = opts,
-    go_back = function ()
-      _resume_picker(picker)
-    end,
+    from_log = true,
   }
 end
 
@@ -94,25 +81,26 @@ end
 
 local function go_back(bufnr)
   local picker = action_state.get_current_picker(bufnr)
-  local opts = picker._cvs_opts or {}
-  if opts.go_back then
-    opts.go_back(bufnr)
+  if picler._from_log then
+    builtin.resume()
   end
 end
 
 local function go_back_or_close(bufnr)
   local picker = action_state.get_current_picker(bufnr)
-  local opts = picker._cvs_opts or {}
-  if opts.go_back then
-    opts.go_back(bufnr)
+  if picler._from_log then
+    builtin.resume()
   else
     actions.close(bufnr)
   end
 end
 
 local function go_back_backspace(bufnr)
+  local picker = action_state.get_current_picker(bufnr)
   if action_state.get_current_line() == '' then
-    go_back(bufnr)
+    if picker._from_log then
+      builtin.resume()
+    end
   else
     local keys = vim.api.nvim_replace_termcodes("<bs>", true, false, true)
     vim.api.nvim_feedkeys(keys, "tn", false)
@@ -131,7 +119,7 @@ local function commit_file(bufnr)
   actions.close(bufnr)
   ui_commit(files, {
     go_back = function ()
-      _resume_picker(picker)
+      builtin.resume()
     end
   })
 end
@@ -141,7 +129,6 @@ return transform_mod{
   diff_commits = diff_commits,
   revert_file = revert_file,
   open_log_entry = open_log_entry,
-  go_back = go_back,
   go_back_backspace = go_back_backspace,
   go_back_or_close = go_back_or_close,
   commit_file = commit_file,

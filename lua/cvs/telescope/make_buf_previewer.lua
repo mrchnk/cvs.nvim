@@ -14,6 +14,9 @@ end
 
 local function preview_fn(self, entry, status)
   local buf = self.state.buf
+  if not buf then
+    return
+  end
   self.state.win = status.preview_win
   self.state.entry = entry
   vim.api.nvim_win_set_buf(status.preview_win, buf)
@@ -67,6 +70,7 @@ return function (opts)
     teardown = function (self, status)
       local buf = self.state.buf
       vim.api.nvim_buf_delete(buf, {force = true})
+      self.state = nil
     end,
     preview_fn = preview_fn,
     scroll_fn = scroll_fn,

@@ -29,6 +29,7 @@ return function (opts)
     files = opts.files,
     opts = opts.opts,
   }
+  picker._from_log = opts.from_log
   picker:find()
 end
 

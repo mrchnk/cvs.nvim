@@ -1,9 +1,8 @@
 local make_args = require('cvs.make_args')
 
 local function get_screen_size()
-  local win = vim.fn.win_getid(1)
-  local width = vim.api.nvim_win_get_width(win)
-  local height = vim.api.nvim_win_get_height(win)
+  local width = vim.o.columns
+  local height = vim.o.lines
   return width, height
 end
 
