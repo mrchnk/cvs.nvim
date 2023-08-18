@@ -53,8 +53,8 @@ local function ask_commit_message(msg, cb, opts)
     cb(message)
     committed = true
   end
-  vim.api.nvim_buf_set_keymap(buf, 'i', '<C-A>c', '', {callback = complete})
-  vim.api.nvim_buf_set_keymap(buf, 'n', '<C-A>c', '', {callback = complete})
+  vim.api.nvim_buf_set_keymap(buf, 'i', '<C-S>', '', {callback = complete})
+  vim.api.nvim_buf_set_keymap(buf, 'n', '<C-S>', '', {callback = complete})
   vim.api.nvim_buf_set_keymap(buf, 'n', '<ESC>', '', {
     callback = function()
       vim.api.nvim_win_close(win, true)
@@ -76,20 +76,31 @@ local function cvs_up(files)
   end, out)
 end
 
-local function has_with_status(files, statuses)
-  for _, line in ipairs(files) do
-    if statuses[line[1]] then
+local function has_with_status(s_files, statuses)
+  for _, s_file in ipairs(s_files) do
+    if statuses[s_file[1]] then
       return true
     end
   end
   return false
 end
 
+local function with_status(s_files, status)
+  local files = {}
+  for _, s_file in ipairs(s_files) do
+    if status == s_file[1] then
+      table.insert(files, s_file[2])
+    end
+  end
+  return files
+end
+
+
 local function format_info(files)
   local msg = {
     '',
     '# Please enter commit message for your changes. Lines started with "#" will',
-    '# be ignored in commit message. Press <Ctrl+Enter> to submit.',
+    '# be ignored in commit message. Press <Ctrl-S> to submit.',
   }
   local function add_with_status(head, statuses)
     if not has_with_status(files, statuses) then
@@ -134,7 +145,12 @@ end
 
 return function (files, opts)
   local s_files = cvs_up(files)
-  if not has_with_status(s_files, {R = true, A = true, M = true}) then
+  local missing_files = with_status(s_files, 'U')
+  if #missing_files == 1 then
+    error(string.format('File %s is missing', make_args(missing_files)))
+  elseif #missing_files > 1 then
+    error(string.format('Files %s are missing', make_args(missing_files)))
+  elseif not has_with_status(s_files, {R = true, A = true, M = true}) then
     error('No changes to commit')
   end
   local info = format_info(s_files)
