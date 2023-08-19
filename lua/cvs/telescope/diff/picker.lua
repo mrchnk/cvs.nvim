@@ -1,8 +1,8 @@
 local pickers = require('telescope.pickers')
-local make_finder = require('cvs.telescope.make_diff_finder')
-local make_previewer = require('cvs.telescope.make_diff_previewer')
-local make_sorter = require('cvs.telescope.make_diff_sorter')
-local cvs_actions = require('cvs.telescope.actions')
+local make_finder = require('cvs.telescope.diff.finder')
+local make_previewer = require('cvs.telescope.diff.previewer')
+local make_sorter = require('cvs.telescope.diff.sorter')
+local cvs_actions = require('cvs.telescope.diff.actions')
 
 local function attach_mappings(self, map)
   local modes = {'i', 'n'}

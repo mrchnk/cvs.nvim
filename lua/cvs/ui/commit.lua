@@ -1,4 +1,4 @@
-local make_args = require('cvs.make_args')
+local make_args = require('cvs.utils.make_args')
 
 local function get_screen_size()
   local width = vim.o.columns

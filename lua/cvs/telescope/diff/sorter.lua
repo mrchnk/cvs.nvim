@@ -1,6 +1,6 @@
 local sorters = require('telescope.sorters')
 local fzy = require('telescope.algos.fzy')
-local some_str_find = require('cvs.util.some_str_find')
+local some_str_find = require('cvs.utils.some_str_find')
 local OFFSET = -fzy.get_score_floor()
 
 local function scoring_fn(self, prompt, line, entry)

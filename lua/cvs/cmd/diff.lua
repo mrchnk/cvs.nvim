@@ -1,6 +1,6 @@
 local cvs_diff = require('cvs.diff')
 local ui_diff = require('cvs.ui.diff')
-local telescope_diff = require('cvs.telescope.diff')
+local telescope_diff = require('cvs.telescope.diff.picker')
 local parse_args = require('cvs.cmd.parse_args')
 
 local function is_file(name)

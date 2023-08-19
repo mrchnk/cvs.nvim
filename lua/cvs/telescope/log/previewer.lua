@@ -1,5 +1,5 @@
 local fzy = require('telescope.algos.fzy')
-local find_words = require('cvs.util.find_words')
+local find_words = require('cvs.utils.find_words')
 local make_buf_previewer = require('cvs.telescope.make_buf_previewer')
 
 local function get_max_file_len(files)

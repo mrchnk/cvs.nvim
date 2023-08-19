@@ -1,4 +1,4 @@
-local telescope_log = require('cvs.telescope.log')
+local telescope_log = require('cvs.telescope.log.picker')
 local parse_args = require('cvs.cmd.parse_args')
 
 return function (command_options)

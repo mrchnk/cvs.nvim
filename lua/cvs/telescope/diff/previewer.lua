@@ -1,5 +1,5 @@
 local make_buf_previewer = require('cvs.telescope.make_buf_previewer')
-local find_words = require('cvs.util.find_words')
+local find_words = require('cvs.utils.find_words')
 
 local function setup_buf(buf)
   vim.api.nvim_buf_set_option(buf, 'syntax', 'diff')

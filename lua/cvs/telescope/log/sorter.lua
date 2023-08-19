@@ -1,7 +1,7 @@
 local sorters = require('telescope.sorters')
-local find_words = require('cvs.util.find_words')
-local some_str_find = require('cvs.util.some_str_find')
-local some_fzy_match = require('cvs.util.some_fzy_match')
+local find_words = require('cvs.utils.find_words')
+local some_str_find = require('cvs.utils.some_str_find')
+local some_fzy_match = require('cvs.utils.some_fzy_match')
 
 local function scoring_fn(self, prompt, ordinal, entry)
   return 1/entry.value.ts

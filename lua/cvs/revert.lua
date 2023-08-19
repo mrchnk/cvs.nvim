@@ -1,4 +1,4 @@
-local make_args = require('cvs.make_args')
+local make_args = require('cvs.utils.make_args')
 
 local function cvs_up(files, args)
   local cmd = string.format('cvs up %s', table.concat({

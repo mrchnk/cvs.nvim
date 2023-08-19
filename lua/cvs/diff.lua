@@ -1,4 +1,4 @@
-local make_args = require('cvs.make_args')
+local make_args = require('cvs.utils.make_args')
 local FILE_SEP = '==================================================================='
 
 local function cvs_diff(files, opts)
