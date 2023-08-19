@@ -25,7 +25,6 @@ end
 
 local function diff_commits(bufnr)
   local picker = action_state.get_current_picker(bufnr)
-  local opts = picker._cvs_opts or {}
   local entries = picker:get_multi_selection()
   local left, right
   if #entries == 2 then
@@ -46,7 +45,7 @@ local function diff_commits(bufnr)
     get_rev_date(left.ts),
     get_rev_date(right.ts),
   }
-  local files = opts.files or {}
+  local files = picker.finder._files or {}
   _telescope_diff(bufnr, files, { rev_date = rev_date })
 end
 

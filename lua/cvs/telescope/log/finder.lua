@@ -152,7 +152,9 @@ return function (finder_opts)
     local files = finder_opts.files or {}
     local opts = finder_opts.opts or {}
     local results = cvs_log(files, opts)
-    return make_table_finder(results)
+    local finder = make_table_finder(results)
+    finder._files = files
+    return finder
   end
 end
 
