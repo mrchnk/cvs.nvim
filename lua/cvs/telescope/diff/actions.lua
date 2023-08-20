@@ -4,6 +4,55 @@ local builtin = require('telescope.builtin')
 local ui_diff = require('cvs.ui.diff')
 local ui_commit = require('cvs.ui.commit')
 local cvs_revert = require('cvs.revert')
+local buf_from_rev = require('cvs.utils.buf_from_rev')
+local buf_from_file = require('cvs.utils.buf_from_file')
+
+local _append_to_history = function(bufnr)
+  local history = action_state.get_current_history()
+  local line = action_state.get_current_line()
+  local picker = action_state.get_current_picker(bufnr)
+  history:append(line, picker)
+end
+
+local function _open_file(bufnr, cmd)
+  local entry = action_state.get_selected_entry()
+  if not entry then
+    return
+  end
+  local file = entry.value.file
+  local rev1 = entry.value.rev1
+  local rev2 = entry.value.rev2
+  local buf
+  if rev2 == 'HEAD' then
+    buf = buf_from_file(file)
+  elseif rev2 == nil then
+    buf = buf_from_rev(file, rev1)
+  else
+    buf = buf_from_rev(file, rev2)
+  end
+  actions.close(bufnr)
+  vim.cmd(string.format('%s sb%s', cmd, buf))
+end
+
+local function open_file(bufnr)
+  _append_to_history(bufnr)
+  _open_file(bufnr, '')
+end
+
+local function open_file_horizontal(bufnr)
+  _append_to_history(bufnr)
+  _open_file(bufnr, 'horizontal')
+end
+
+local function open_file_vertical(bufnr)
+  _append_to_history(bufnr)
+  _open_file(bufnr, 'vertical')
+end
+
+local function open_file_tab(bufnr)
+  _append_to_history(bufnr)
+  _open_file(bufnr, 'tab')
+end
 
 local function diff_file(bufnr)
   local entry = action_state.get_selected_entry()
@@ -70,6 +119,10 @@ local function commit_file(bufnr)
 end
 
 return {
+  open_file = open_file,
+  open_file_horizontal = open_file_horizontal,
+  open_file_vertical = open_file_vertical,
+  open_file_tab = open_file_tab,
   go_back = go_back,
   go_back_or_close = go_back_or_close,
   go_back_backspace = go_back_backspace,
