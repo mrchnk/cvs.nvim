@@ -124,7 +124,7 @@ local function go_back_backspace(bufnr)
   end
 end
 
-local function commit_file(bufnr)
+local function commit_files(bufnr)
   local picker = action_state.get_current_picker(bufnr)
   local files = picker.finder._files
   local entries = picker:get_multi_selection()
@@ -163,7 +163,7 @@ return {
   go_back_backspace = go_back_backspace,
   diff_file = diff_file,
   revert_file = revert_file,
-  commit_file = commit_file,
+  commit_files = commit_files,
   add_file = add_file,
 }
 
