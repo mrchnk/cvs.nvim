@@ -1,19 +1,19 @@
 local cmd = require('cvs.cmd')
 
 vim.api.nvim_create_user_command("CVSDiff", cmd.diff, {
-  desc = 'Print changed files',
+  desc = 'Show diff for selected file(s) and revision(s) or cwd status',
   complete = 'file',
   nargs = '?',
 })
 
 vim.api.nvim_create_user_command("CVSLog", cmd.log, {
-  desc = 'Print changed files',
+  desc = 'Show log for selected file(s) or cwd',
   complete = 'file',
   nargs = '?',
 })
 
 vim.api.nvim_create_user_command('CVSCommit', cmd.commit, {
-  desc = 'Commit changed files',
+  desc = 'Commit selected file(s) or staged changes',
   complete = 'file',
   nargs = '?',
 })
