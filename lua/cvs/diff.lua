@@ -25,6 +25,14 @@ local function get_rev(line)
 end
 
 local function make_entry(file, head, body)
+  if #body == 1 then
+    return {
+      file = file,
+      rev2 = 'HEAD',
+      head = head,
+      body = body,
+    }
+  end
   return {
     file = file,
     rev1 = get_rev(body[2]),
