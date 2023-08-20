@@ -9,9 +9,6 @@ local function cvs_diff(files, opts)
     make_args(files)
   }, ' '))
   local lines = vim.fn.systemlist(cmd)
-  if vim.v.shell_error == 0 then
-    error('No changes found')
-  end
   return lines
 end
 

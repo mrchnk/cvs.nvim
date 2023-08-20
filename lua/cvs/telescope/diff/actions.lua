@@ -26,6 +26,10 @@ local function _refresh_finder(bufnr)
   picker:refresh(finder, { reset_prompt = false })
 end
 
+local function _unpatch(entry)
+  error('Unpatch is not implemented')
+end
+
 local function _open_file(bufnr, cmd)
   local entry = action_state.get_selected_entry()
   if not entry then
@@ -79,21 +83,27 @@ local function revert_file(bufnr)
   if not entry then
     return
   end
-  local file = entry.value.file
-  local rev1 = entry.value.rev1
-  local rev2 = entry.value.rev2
-  if rev2 == 'HEAD' then
-    if rev1 then
-      cvs_revert({file})
+  local picker = action_state.get_current_picker(bufnr)
+  local opts = picker.finder._opts
+  if not opts.rev_date then
+    local file = entry.value.file
+    local rev1 = entry.value.rev1
+    local rev2 = entry.value.rev2
+    if rev2 == 'HEAD' then
+      if rev1 then
+        cvs_revert({file})
+      else
+        cvs_remove({file})
+      end
+    elseif not rev1 and not rev2 then
+      error('File is not in CVS or added')
     else
-      cvs_remove({file})
+      error('Cannot revert from log entry')
     end
-  elseif not rev1 and not rev2 then
-    error('File is not in CVS or added')
+    _refresh_finder(bufnr)
   else
-    error('Cannot revert from log entry')
+    _unpatch(entry)
   end
-  _refresh_finder(bufnr)
 end
 
 local function go_back(bufnr)
