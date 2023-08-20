@@ -29,7 +29,7 @@ return function (file, rev, body)
   if not body then
     body = cvs_up(file, rev).body
   end
-  local name = string.format('%s~r%s', file, rev)
+  local name = string.format('%s -r%s', file, rev)
   local filetype = vim.filetype.match{ filename = file }
   return open_buffer(name, body, filetype)
 end
