@@ -41,6 +41,8 @@ return function (finder_options)
     local files = finder_options.files or {}
     local opts = finder_options.opts or {}
     local results = cvs_diff(files, opts)
-    return make_table_finder(results)
+    local finder = make_table_finder(results)
+    finder._from_log = finder_options.from_log
+    return finder
   end
 end

@@ -20,13 +20,17 @@ local function attach_mappings(self, map)
 end
 
 return function (opts)
+  local cache_picker
+  if opts.from_log then
+    cache_picker = false
+  end
   local picker = pickers.new{
     finder = make_finder(opts),
     sorter = make_sorter(),
     previewer = make_previewer(),
     attach_mappings = attach_mappings,
+    cache_picker = cache_picker
   }
-  picker._from_log = opts.from_log
   picker:find()
 end
 

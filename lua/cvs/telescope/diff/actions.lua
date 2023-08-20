@@ -8,9 +8,9 @@ local buf_from_rev = require('cvs.utils.buf_from_rev')
 local buf_from_file = require('cvs.utils.buf_from_file')
 
 local _append_to_history = function(bufnr)
+  local picker = action_state.get_current_picker(bufnr)
   local history = action_state.get_current_history()
   local line = action_state.get_current_line()
-  local picker = action_state.get_current_picker(bufnr)
   history:append(line, picker)
 end
 
@@ -31,27 +31,27 @@ local function _open_file(bufnr, cmd)
     buf = buf_from_rev(file, rev2)
   end
   actions.close(bufnr)
-  vim.cmd(string.format('%s sb%s', cmd, buf))
+  vim.cmd(string.format('%s%s', cmd, buf))
 end
 
 local function open_file(bufnr)
   _append_to_history(bufnr)
-  _open_file(bufnr, '')
+  _open_file(bufnr, 'b')
 end
 
 local function open_file_horizontal(bufnr)
   _append_to_history(bufnr)
-  _open_file(bufnr, 'horizontal')
+  _open_file(bufnr, 'horizontal sb')
 end
 
 local function open_file_vertical(bufnr)
   _append_to_history(bufnr)
-  _open_file(bufnr, 'vertical')
+  _open_file(bufnr, 'vertical sb')
 end
 
 local function open_file_tab(bufnr)
   _append_to_history(bufnr)
-  _open_file(bufnr, 'tab')
+  _open_file(bufnr, 'tab sb')
 end
 
 local function diff_file(bufnr)
@@ -75,14 +75,14 @@ end
 
 local function go_back(bufnr)
   local picker = action_state.get_current_picker(bufnr)
-  if picker._from_log then
+  if picker.finder._from_log then
     builtin.resume()
   end
 end
 
 local function go_back_or_close(bufnr)
   local picker = action_state.get_current_picker(bufnr)
-  if picker._from_log then
+  if picker.finder._from_log then
     builtin.resume()
   else
     actions.close(bufnr)
@@ -92,7 +92,7 @@ end
 local function go_back_backspace(bufnr)
   local picker = action_state.get_current_picker(bufnr)
   if action_state.get_current_line() == '' then
-    if picker._from_log then
+    if picker.finder._from_log then
       builtin.resume()
     end
   else

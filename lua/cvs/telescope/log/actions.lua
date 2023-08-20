@@ -50,7 +50,7 @@ local function diff_commits(bufnr)
 end
 
 return {
-  diff_commits = diff_commits,
   open_log_entry = open_log_entry,
+  diff_commits = diff_commits,
 }
 
