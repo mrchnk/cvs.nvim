@@ -1,17 +1,6 @@
 local buf_from_file = require('cvs.utils.buf_from_file')
 local buf_from_rev = require('cvs.utils.buf_from_rev')
-
-local function open_buffer(name, body)
-  local bufnr = vim.fn.bufnr(name)
-  if bufnr > 0 then
-    return bufnr
-  end
-  bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(bufnr, name)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, body)
-  vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
-  return bufnr
-end
+local buf_for_null = require('cvs.utils.buf_for_null')
 
 local function setup_window(win)
   vim.api.nvim_win_call(win, function ()
@@ -39,7 +28,7 @@ local function buf_from_entry(entry)
   elseif rev then
     return buf_from_rev(file, rev, body)
   else
-    return open_buffer('/dev/null', {})
+    return buf_for_null()
   end
 end
 
