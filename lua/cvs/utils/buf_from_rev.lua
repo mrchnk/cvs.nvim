@@ -9,7 +9,9 @@ local function open_buffer(name, body, filetype)
   vim.api.nvim_buf_set_name(bufnr, name)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, body)
   vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
-  vim.api.nvim_buf_set_option(bufnr, 'filetype', filetype)
+  if filetype then
+    vim.api.nvim_buf_set_option(bufnr, 'filetype', filetype)
+  end
   return bufnr
 end
 
@@ -23,9 +25,11 @@ local function get_name(file, rev)
   end
 end
 
-return function (file, rev)
-  local entry = cvs_up(file, rev)
+return function (file, rev, body)
+  if not body then
+    body = cvs_up(file, rev).body
+  end
   local name = string.format('%s~r%s', file, rev)
   local filetype = vim.filetype.match{ filename = file }
-  return open_buffer(name, entry.body, filetype)
+  return open_buffer(name, body, filetype)
 end

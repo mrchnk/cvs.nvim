@@ -1,4 +1,5 @@
-local cvs_up = require('cvs.up')
+local buf_from_file = require('cvs.utils.buf_from_file')
+local buf_from_rev = require('cvs.utils.buf_from_rev')
 
 local function open_buffer(name, body)
   local bufnr = vim.fn.bufnr(name)
@@ -12,17 +13,12 @@ local function open_buffer(name, body)
   return bufnr
 end
 
-local function open_file(file)
-  vim.cmd.badd(file)
-  return vim.fn.bufnr(file)
-end
-
 local function setup_window(win)
   vim.api.nvim_win_call(win, function ()
     vim.cmd.diffthis()
   end)
   vim.api.nvim_win_set_option(win, 'foldmethod', 'diff')
-  vim.api.nvim_win_set_option(win, 'foldlevel', 0)
+  vim.api.nvim_win_set_option(win, 'foldlevel', 1)
 end
 
 local function open_tab(buf_left, buf_right)
@@ -34,30 +30,23 @@ local function open_tab(buf_left, buf_right)
   setup_window(win_left)
 end
 
-
-local function open(entry)
-  if entry.body and entry.rev then
-    local name = string.format("%s,%s", entry.file, entry.rev)
-    return open_buffer(name, entry.body)
-  else
-    return open_file(entry.file)
-  end
-end
-
-local function from(file, rev)
+local function buf_from_entry(entry)
+  local file = entry.file
+  local rev = entry.rev
+  local body = entry.body
   if rev == 'HEAD' then
-    return open_file(file)
+    return buf_from_file(file)
   elseif rev then
-    return open(cvs_up(file, rev))
+    return buf_from_rev(file, rev, body)
   else
     return open_buffer('/dev/null', {})
   end
 end
 
-local function open_diff(entry)
+local function buf_from_diff(entry)
   local file = entry.file
-  local left = from(file, entry.rev1)
-  local right = from(file, entry.rev2)
+  local left = buf_from_entry{ file = file, rev = entry.rev1 }
+  local right = buf_from_entry{ file = file, rev = entry.rev2 }
   return left, right
 end
 
@@ -65,10 +54,10 @@ return function (left, right)
   local buf_left
   local buf_right
   if not right then
-    buf_left, buf_right = open_diff(left)
+    buf_left, buf_right = buf_from_diff(left)
   else
-    buf_left = open(left)
-    buf_right = open(right)
+    buf_left = buf_from_entry(left)
+    buf_right = buf_from_entry(right)
   end
   open_tab(buf_left, buf_right)
 end
