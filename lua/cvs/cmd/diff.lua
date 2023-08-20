@@ -11,6 +11,9 @@ return function (command_options)
   local files, opts = parse_args(command_options.args)
   if #files == 1 and is_file(files[1]) then
     local diff_results = cvs_diff(files, opts)
+    if #diff_results == 0 then
+      error('Files are identical')
+    end
     ui_diff(diff_results[1])
   else
     telescope_diff{
