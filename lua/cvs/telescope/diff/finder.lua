@@ -60,18 +60,22 @@ return function (finder_options)
     local files = finder_options.files or {}
     local opts = finder_options.opts or {}
     local results = cvs_diff(files, opts)
-    if #files == 0 then
-      append_unversioned(results)
-    else
-      for _, name in ipairs(files) do
-        if vim.fn.isdirectory(name) then
-          append_unversioned(results, name)
+    if not opts.rev_date then
+      -- diff last rev with current
+      if #files == 0 then
+        append_unversioned(results)
+      else
+        for _, name in ipairs(files) do
+          if vim.fn.isdirectory(name) then
+            append_unversioned(results, name)
+          end
         end
       end
     end
     local finder = make_table_finder(results)
     finder._from_log = finder_options.from_log
     finder._files = files
+    finder._opts = opts
     return finder
   end
 end

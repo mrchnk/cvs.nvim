@@ -4,14 +4,26 @@ local builtin = require('telescope.builtin')
 local ui_diff = require('cvs.ui.diff')
 local ui_commit = require('cvs.ui.commit')
 local cvs_revert = require('cvs.revert')
+local cvs_add = require('cvs.add')
+local cvs_remove = require('cvs.remove')
 local buf_from_rev = require('cvs.utils.buf_from_rev')
 local buf_from_file = require('cvs.utils.buf_from_file')
+local make_finder = require('cvs.telescope.diff.finder')
 
 local _append_to_history = function(bufnr)
   local picker = action_state.get_current_picker(bufnr)
   local history = action_state.get_current_history()
   local line = action_state.get_current_line()
   history:append(line, picker)
+end
+
+local function _refresh_finder(bufnr)
+  local picker = action_state.get_current_picker(bufnr)
+  local finder = make_finder{
+    files = picker.finder._files,
+    opts = picker.finder._opts,
+  }
+  picker:refresh(finder, { reset_prompt = false })
 end
 
 local function _open_file(bufnr, cmd)
@@ -62,17 +74,26 @@ local function diff_file(bufnr)
   ui_diff(entry.value)
 end
 
-
 local function revert_file(bufnr)
-  local picker = action_state.get_current_picker(bufnr)
-  local entries = picker:get_multi_selection()
-  if #entries == 0 then
-     entries = {action_state.get_selected_entry()}
+  local entry = action_state.get_selected_entry()
+  if not entry then
+    return
   end
-  local files = vim.tbl_map(function (entry)
-    return entry.value.file
-  end, entries)
-  cvs_revert(files)
+  local file = entry.value.file
+  local rev1 = entry.value.rev1
+  local rev2 = entry.value.rev2
+  if rev2 == 'HEAD' then
+    if rev1 then
+      cvs_revert({file})
+    else
+      cvs_remove({file})
+    end
+  elseif not rev1 and not rev2 then
+    error('File is not in CVS or added')
+  else
+    error('Cannot revert from log entry')
+  end
+  _refresh_finder(bufnr)
 end
 
 local function go_back(bufnr)
@@ -105,19 +126,31 @@ end
 
 local function commit_file(bufnr)
   local picker = action_state.get_current_picker(bufnr)
+  local files = picker.finder._files
   local entries = picker:get_multi_selection()
-  if #entries == 0 then
-     entries = {action_state.get_selected_entry()}
+  if #entries > 0 then
+    files = vim.tbl_map(function (entry)
+      return entry.value.file
+    end, entries)
   end
-  local files = vim.tbl_map(function (entry)
-    return entry.value.file
-  end, entries)
   actions.close(bufnr)
   ui_commit(files, {
     go_back = function ()
       builtin.resume()
     end
   })
+end
+
+local function add_file(bufnr)
+  local entry = action_state.get_selected_entry()
+  local file = entry.value.file
+  local rev1 = entry.value.rev1
+  local rev2 = entry.value.rev2
+  if rev1 or rev2 then
+    error('File is under CVS')
+  end
+  cvs_add(file)
+  _refresh_finder(bufnr)
 end
 
 return {
@@ -131,5 +164,6 @@ return {
   diff_file = diff_file,
   revert_file = revert_file,
   commit_file = commit_file,
+  add_file = add_file,
 }
 

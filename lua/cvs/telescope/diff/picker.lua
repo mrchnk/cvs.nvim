@@ -16,6 +16,7 @@ local function attach_mappings(self, map)
   map(modes, '<Leader>c', cvs_actions.commit_file)
   map(modes, '<Leader>d', cvs_actions.diff_file)
   map(modes, '<Leader>r', cvs_actions.revert_file)
+  map(modes, '<Leader>a', cvs_actions.add_file)
   return true
 end
 
