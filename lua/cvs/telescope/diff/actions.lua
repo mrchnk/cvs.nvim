@@ -37,10 +37,10 @@ local function _open_file(bufnr, cmd)
   local buf
   if rev2 == 'HEAD' then
     buf = buf_from_file(file)
-  elseif rev2 == nil then
-    buf = buf_from_rev(file, rev1)
-  elseif rev1 then
+  elseif rev2 then
     buf = buf_from_rev(file, rev2)
+  elseif rev1 then
+    buf = buf_from_rev(file, rev1)
   else
     buf = buf_from_file(file)
   end
