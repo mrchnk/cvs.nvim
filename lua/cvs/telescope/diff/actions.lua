@@ -27,8 +27,10 @@ local function _open_file(bufnr, cmd)
     buf = buf_from_file(file)
   elseif rev2 == nil then
     buf = buf_from_rev(file, rev1)
-  else
+  elseif rev1 then
     buf = buf_from_rev(file, rev2)
+  else
+    buf = buf_from_file(file)
   end
   actions.close(bufnr)
   vim.cmd(string.format('%s%s', cmd, buf))
