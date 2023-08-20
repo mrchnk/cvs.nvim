@@ -95,10 +95,13 @@ local function revert_file(bufnr)
       else
         cvs_remove({file})
       end
-    elseif not rev1 and not rev2 then
-      error('File is not in CVS or added')
-    else
+    elseif rev2 then
       error('Cannot revert from log entry')
+    elseif rev1 then
+      cvs_add(file)
+      cvs_revert({file})
+    else
+      error('File is not in CVS or added')
     end
     _refresh_finder(bufnr)
   else
