@@ -24,13 +24,12 @@ return function (opts)
   if opts.from_log then
     cache_picker = false
   end
-  local picker = pickers.new{
+  pickers.new{
     finder = make_finder(opts),
     sorter = make_sorter(),
     previewer = make_previewer(),
     attach_mappings = attach_mappings,
     cache_picker = cache_picker
-  }
-  picker:find()
+  }:find()
 end
 

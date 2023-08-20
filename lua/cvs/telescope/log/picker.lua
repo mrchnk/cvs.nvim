@@ -13,12 +13,11 @@ local function attach_mappings(self, map)
 end
 
 return function (opts)
-  local picker = pickers.new{
+  pickers.new{
     finder = make_finder(opts),
     sorter = make_sorter(),
     previewer = make_previewer(),
     attach_mappings = attach_mappings,
-  }
-  picker:find()
+  }:find()
 end
 
