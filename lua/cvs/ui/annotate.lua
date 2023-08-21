@@ -17,8 +17,8 @@ end
 
 local function combine(annotate, log)
   local function find_commit(rev)
-    for _, log_entry in ipairs(log) do
-      for _, commit in ipairs(log_entry.commits) do
+    for _, entry in ipairs(log) do
+      for _, commit in ipairs(entry.commits) do
         if commit.rev == rev then
           return commit
         end
@@ -26,21 +26,15 @@ local function combine(annotate, log)
     end
   end
   return vim.tbl_map(function (entry)
+    local commit = find_commit(entry.rev)
     return {
       rev = entry.rev,
-      author = entry.author,
+      author = commit and commit.author or entry.author,
       date = entry.date,
       line = entry.line,
-      commit = find_commit(rev)
+      commit = commit,
     }
   end, annotate)
-end
-
-local function format(entry)
-  if not entry.author then
-    return entry.line
-  end
-  return string.format('%s -r%s %s', entry.author, entry.rev, entry.date)
 end
 
 local function setup_window(self)
@@ -135,11 +129,15 @@ return function (opts)
     file = opts.file
     buf = buf_from_file(file)
   else
+    vim.api.nvim_win_call(win, function ()
+      file = vim.fn.expand('%')
+    end)
     buf = vim.api.nvim_win_get_buf(win)
-    file = vim.api.nvim_buf_get_name(buf)
   end
   local annotate = cvs_annotate(file, {})
   local log = cvs_log({file}, {})
+  --vim.print(log)
+  --vim.print(combine(annotate, log))
   return setmetatable({
     buf = buf,
     win = win,

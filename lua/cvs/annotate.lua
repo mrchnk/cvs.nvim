@@ -2,7 +2,7 @@ function cvs_annotate(file, opts)
   local cmd = string.format('cvs annotate %s "%s" 2>/dev/null', '', file)
   local out = vim.fn.systemlist(cmd)
   if vim.v.shell_error > 0 then
-    error('cvs annotate failed')
+    error('cvs annotate failed: ' .. cmd)
   end
   return out
 end
