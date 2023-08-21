@@ -18,3 +18,7 @@ vim.api.nvim_create_user_command('CVSCommit', cmd.commit, {
   nargs = '?',
 })
 
+vim.api.nvim_create_user_command('CVSAnnotate', cmd.annotate, {
+  desc = 'Annotate current buffer',
+})
+
