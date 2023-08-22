@@ -1,5 +1,6 @@
 local finders = require('telescope.finders')
 local cvs_log = require('cvs.log')
+local cvs_hl = require('cvs.ui.highlight')
 
 local function make_entry(log_entry)
   local title = log_entry.title
@@ -9,7 +10,7 @@ local function make_entry(log_entry)
     ordinal = title,
     display = function ()
       local text = string.format('%s: %s', author, title)
-      local hl = { { { 0, #author+1 }, 'Constant' } }
+      local hl = { { { 0, #author+1 }, cvs_hl.id.author } }
       return text, hl
     end,
   }

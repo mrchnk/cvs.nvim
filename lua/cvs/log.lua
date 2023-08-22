@@ -17,6 +17,18 @@ local function cvs_log(files, opts)
   return lines
 end
 
+local function ts(date)
+  local Y, M, D, h, m, s = string.match(date, '(%d+)-(%d%d)-(%d%d) (%d%d):(%d%d):(%d%d)')
+  return os.time{
+    year = Y,
+    month = M,
+    day = D,
+    hour = h,
+    min = m,
+    sec = s,
+  }
+end
+
 local function make_entry(head, commits)
   local file
   for _, line in ipairs(head) do
@@ -46,6 +58,9 @@ local function make_commit(lines)
   for kv in vim.gsplit(lines[2], ';%s*', {trimempty=true}) do
     local k, v = string.match(kv, '(%a+):%s+(.*)')
     commit[k] = v
+  end
+  if commit.date then
+    commit.ts = ts(commit.date)
   end
   return commit
 end

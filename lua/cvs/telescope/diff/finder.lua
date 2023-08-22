@@ -1,5 +1,6 @@
 local finders = require('telescope.finders')
 local cvs_diff = require('cvs.diff')
+local cvs_hl = require('cvs.ui.highlight')
 
 local function change(e)
   if e.rev1 and e.rev2 then
@@ -21,7 +22,7 @@ local function make_entry(diff_entry)
     ordinal = file,
     display = function ()
       local label = string.format('%s %s', change(diff_entry), file)
-      local hl = { { { 0, 1 }, 'Keyword' } }
+      local hl = { { { 0, 1 }, cvs_hl.id.status } }
       return label, hl
     end,
   }

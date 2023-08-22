@@ -1,7 +1,9 @@
 local cvs_annotate = require('cvs.annotate')
 local cvs_log = require('cvs.log')
+local cvs_hl = require('cvs.ui.highlight')
 local buf_from_file = require('cvs.utils.buf_from_file')
 
+local annotate_sign_id = 'CVSAnnotateRev'
 local UiAnnotate = {}
 
 local function max_width(result, key)
@@ -15,7 +17,29 @@ local function max_width(result, key)
   return max
 end
 
-local function get_opt(win, opts)
+local function minmax(tbl, fn)
+  local min = nil
+  local max = nil
+  for _, entry in ipairs(tbl) do
+    local v = fn(entry)
+    if v then
+      if min and max then
+        min = v < min and v or min
+        max = v > max and v or max
+      else
+        min = v
+        max = v
+      end
+    end
+  end
+  return min, max
+end
+
+local function get_temp(x, a, b)
+  return (x - a) / (b - a)
+end
+
+local function win_get_opts(win, opts)
   local val = {}
   for _, name in ipairs(opts) do
     val[name] = vim.api.nvim_get_option_value(name, { win = win })
@@ -23,7 +47,7 @@ local function get_opt(win, opts)
   return val
 end
 
-local function set_opt(win, opts)
+local function win_set_opts(win, opts)
   for name, value in pairs(opts) do
     vim.api.nvim_set_option_value(name, value, { win = win })
   end
@@ -45,6 +69,7 @@ local function combine(annotate, log)
       rev = entry.rev,
       author = commit and commit.author or entry.author,
       date = entry.date,
+      ts = commit and commit.ts or nil,
       line = entry.line,
       commit = commit,
     }
@@ -58,13 +83,13 @@ local function setup_window(self)
     vim.cmd('lefta vs')
     annotate_win = vim.api.nvim_get_current_win()
   end)
-  self._win_opt = get_opt(win, {'cursorbind', 'scrollbind', 'cursorline'})
-  set_opt(win, {
+  self._win_opt = win_get_opts(win, {'cursorbind', 'scrollbind', 'cursorline'})
+  win_set_opts(win, {
     cursorbind = true,
     scrollbind = true,
     cursorline = true,
   })
-  set_opt(annotate_win, {
+  win_set_opts(annotate_win, {
     cursorbind = true,
     scrollbind = true,
     cursorline = true,
@@ -84,26 +109,25 @@ local function update_popover(self)
 end
 
 local function setup_signs(self)
-  vim.cmd.highlight('CVSAnnotateRev guifg=#00FF00')
-  vim.fn.sign_define('CVSAnnotateRev', {
-    text = '┃',
-    texthl = 'CVSAnnotateRev',
-  })
 end
 
 local function update_signs(self)
-  vim.fn.sign_unplace('CVSAnnotateRev', {buffer = self.buf})
   local meta = self._meta
   if not meta then
     return
   end
   local idx = vim.api.nvim_win_get_cursor(self.win)[1]
-  local rev = meta[idx].rev
-  if rev then
-    for i, entry in ipairs(meta) do
-      if entry.rev == rev then
-        vim.fn.sign_place(0, 'CVSAnnotateRev', 'CVSAnnotateRev', self.buf, {lnum = i})
-      end
+  local line = meta[idx]
+  if self._signs_rev ~= line.rev then
+    self._signs_rev = line.rev
+    vim.fn.sign_unplace(annotate_sign_id, {buffer = self.buf})
+    if line.rev then
+      local t = line.ts and get_temp(line.ts, self._min_ts, self._max_ts) or 0
+      vim.fn.sign_define('CVSAnnotateRev', {
+        text = '┃',
+        texthl = cvs_hl.get_annotate_fg(t),
+      })
+      vim.fn.sign_placelist(self._signs[line.rev])
     end
   end
 end
@@ -117,32 +141,31 @@ end
 
 
 local function build_annotate(self)
-  local annotate = self._annotate
-  local result = {unpack(annotate)}
+  local meta = vim.deepcopy(self._annotate)
   local buf = self.buf
-  local a = table.concat(vim.tbl_map(function (entry) return entry.line end, annotate), '\n')
+  local a = table.concat(vim.tbl_map(function (entry) return entry.line end, meta), '\n')
   local b = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, true), '\n')
   local function replace(idx, len, cnt, val)
     for _ = 1, len do
-      table.remove(result, idx)
+      table.remove(meta, idx)
     end
     for _ = 1, cnt do
-      table.insert(result, idx, val)
+      table.insert(meta, idx, val)
     end
   end
   local shift = 0
   vim.diff(a, b, {on_hunk = function (a_i, a_c, b_i, b_c)
     if a_c > 0 then
-      replace(a_i + shift, a_c, b_c, { line = 'CHANGED' })
+      replace(a_i + shift, a_c, b_c, { line = '' })
       shift = shift + b_c - a_c
     else
-      replace(a_i + shift + 1, 0, b_c, { line = 'INSERTED' })
+      replace(a_i + shift + 1, 0, b_c, { line = '' })
       shift = shift + b_c
     end
   end})
-  local max_author_width = max_width(result, 'author')
-  local max_rev_width = max_width(result, 'rev') + 2
-  local max_date_width = max_width(result, 'date')
+  local max_author_width = max_width(meta, 'author')
+  local max_rev_width = max_width(meta, 'rev') + 2
+  local max_date_width = max_width(meta, 'date')
   local fmt = string.format('%%-%ds %%%ds %%%ds', max_author_width, max_rev_width, max_date_width)
   local lines = vim.tbl_map(function (entry)
     if not entry.author then
@@ -150,18 +173,47 @@ local function build_annotate(self)
     else
       return string.format(fmt, entry.author, '-r' .. entry.rev, entry.date)
     end
-  end, result)
-  return lines, result
+  end, meta)
+  return lines, meta, {max_author_width, max_rev_width, max_date_width}
+end
+
+local function build_signs(self, meta)
+  local buf = self.buf
+  local signs = vim.defaulttable()
+  for idx, entry in ipairs(meta) do
+    if entry.rev then
+      table.insert(signs[entry.rev], {
+        buffer = buf,
+        name = annotate_sign_id,
+        group = annotate_sign_id,
+        lnum = idx,
+      })
+    end
+  end
+  return signs
 end
 
 local function update_annotate(self)
-  local lines, meta = build_annotate(self)
+  local lines, meta, widths = build_annotate(self)
   local buf = self._annotate_buf
   local win = self._annotate_win
   local width = max_width(lines) + 2
+  local min_ts, max_ts = minmax(meta, function (entry) return entry.ts end)
+  self._min_ts = min_ts
+  self._max_ts = max_ts
   vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
   vim.api.nvim_win_set_width(win, width)
+  for idx, entry in ipairs(meta) do
+    if entry.author then
+      vim.api.nvim_buf_add_highlight(buf, 0, cvs_hl.id.author, idx-1, 0, widths[1])
+    end
+    if entry.ts then
+      local t = (entry.ts - min_ts) / (max_ts - min_ts)
+      vim.api.nvim_buf_add_highlight(buf, 0, cvs_hl.get_annotate(t), idx-1, widths[1] + widths[2] + 2, widths[1] + widths[2] + widths[3] + 2)
+    end
+  end
   self._meta = meta
+  self._signs = build_signs(self, meta)
 end
 
 local function subscribe(self)
@@ -207,7 +259,7 @@ function UiAnnotate.close(self)
   vim.api.nvim_win_close(self._annotate_win, true)
   vim.api.nvim_buf_delete(self._annotate_buf, { force = true })
   vim.fn.sign_unplace('CVSAnnotateRev', {buffer = self.buf})
-  set_opt(self.win, self._win_opt)
+  win_set_opts(self.win, self._win_opt)
 end
 
 --- Open annotate ui for single file
