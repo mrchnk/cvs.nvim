@@ -45,14 +45,45 @@ local function setup_window(self)
     annotate_win = vim.api.nvim_get_current_win()
   end)
   vim.api.nvim_set_option_value('wrap', false, { win = annotate_win })
-	vim.api.nvim_set_option_value('cursorbind', true, { win = win })
-	vim.api.nvim_set_option_value('scrollbind', true, { win = win })
-	vim.api.nvim_set_option_value('cursorline', true, { win = win })
-	vim.api.nvim_set_option_value('cursorbind', true, { win = annotate_win })
-	vim.api.nvim_set_option_value('scrollbind', true, { win = annotate_win })
-	vim.api.nvim_set_option_value('cursorline', true, { win = annotate_win })
+  vim.api.nvim_set_option_value('cursorbind', true, { win = win })
+  vim.api.nvim_set_option_value('scrollbind', true, { win = win })
+  vim.api.nvim_set_option_value('cursorline', true, { win = win })
+  vim.api.nvim_set_option_value('cursorbind', true, { win = annotate_win })
+  vim.api.nvim_set_option_value('scrollbind', true, { win = annotate_win })
+  vim.api.nvim_set_option_value('cursorline', true, { win = annotate_win })
   vim.api.nvim_set_option_value('number', false, { win = annotate_win })
   self._annotate_win = annotate_win
+end
+
+local function open_popover(self)
+end
+
+local function close_popover(self)
+end
+
+local function setup_signs(self)
+  vim.cmd.highlight('CVSAnnotateRev guifg=#00FF00')
+  vim.fn.sign_define('CVSAnnotateRev', {
+    text = '┃',
+    texthl = 'CVSAnnotateRev',
+  })
+end
+
+local function update_signs(self)
+  vim.fn.sign_unplace('CVSAnnotateRev', {buffer = self.buf})
+  local meta = self._meta
+  if not meta then
+    return
+  end
+  local idx = vim.api.nvim_win_get_cursor(self.win)[1]
+  local rev = meta[idx].rev
+  if rev then
+    for i, entry in ipairs(meta) do
+      if entry.rev == rev then
+        vim.fn.sign_place(0, 'CVSAnnotateRev', 'CVSAnnotateRev', self.buf, {lnum = i})
+      end
+    end
+  end
 end
 
 local function setup_buffer(self)
@@ -61,6 +92,7 @@ local function setup_buffer(self)
   vim.api.nvim_win_set_buf(annotate_win, annotate_buf)
   self._annotate_buf = annotate_buf
 end
+
 
 local function build_annotate(self)
   local annotate = self._annotate
@@ -110,12 +142,52 @@ local function update_annotate(self)
   self._meta = meta
 end
 
-function UiAnnotate.open(self)
-  setup_window(self)
-  setup_buffer(self)
-  update_annotate(self)
+local function subscribe(self)
+  local annotate_buf = self._annotate_buf
+  local buf = self.buf
+  local _be = vim.api.nvim_create_autocmd('BufEnter', { buffer = annotate_buf, callback = function ()
+    open_popover(self)
+  end})
+  local _bl = vim.api.nvim_create_autocmd('BufLeave', { buffer = annotate_buf, callback = function ()
+    close_popover(self)
+  end})
+  local _cm = vim.api.nvim_create_autocmd('CursorMoved', { buffer = annotate_buf, callback = function ()
+    update_signs(self)
+  end})
+  local cm = vim.api.nvim_create_autocmd('CursorMoved', { buffer = buf, callback = function ()
+    update_signs(self)
+  end})
+  vim.api.nvim_buf_create_user_command(buf, 'CVSAnnotate', function () self:close() end, {})
+  vim.api.nvim_buf_create_user_command(annotate_buf, 'CVSAnnotate', function () self:close() end, {})
+  self._autocmd = {_be, _bl, _cm, cm}
 end
 
+local function unsubscribe(self)
+  for _, id in ipairs(self._autocmd) do
+    vim.api.nvim_del_autocmd(id)
+  end
+  vim.api.nvim_buf_del_user_command(self._annotate_buf, 'CVSAnnotate')
+  vim.api.nvim_buf_del_user_command(self.buf, 'CVSAnnotate')
+end
+
+function UiAnnotate.open(self)
+  setup_signs(self)
+  setup_window(self)
+  setup_buffer(self)
+  subscribe(self)
+  update_annotate(self)
+  update_signs(self)
+end
+
+function UiAnnotate.close(self)
+  unsubscribe(self)
+  vim.api.nvim_win_close(self._annotate_win, true)
+  vim.api.nvim_buf_delete(self._annotate_buf, { force = true })
+  vim.fn.sign_unplace('CVSAnnotateRev', {buffer = self.buf})
+end
+
+--- Open annotate ui for single file
+--- @param opts table annotate ui options
 return function (opts)
   local win
   if opts.win and opts.win ~= 0 then
@@ -136,14 +208,12 @@ return function (opts)
   end
   local annotate = cvs_annotate(file, {})
   local log = cvs_log({file}, {})
-  --vim.print(log)
-  --vim.print(combine(annotate, log))
-  return setmetatable({
+  setmetatable({
     buf = buf,
     win = win,
     file = file,
     _annotate = combine(annotate, log),
   }, {
     __index = UiAnnotate
-  })
+  }):open()
 end
