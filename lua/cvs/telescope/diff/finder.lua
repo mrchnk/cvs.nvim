@@ -6,7 +6,7 @@ local function change(e)
   if e.rev1 and e.rev2 then
     return 'M'
   elseif e.rev1 then
-    return 'D'
+    return 'R'
   elseif e.rev2 then
     return 'A'
   else
