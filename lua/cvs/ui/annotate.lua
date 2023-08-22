@@ -80,6 +80,9 @@ end
 local function close_popover(self)
 end
 
+local function update_popover(self)
+end
+
 local function setup_signs(self)
   vim.cmd.highlight('CVSAnnotateRev guifg=#00FF00')
   vim.fn.sign_define('CVSAnnotateRev', {
