@@ -15,6 +15,20 @@ local function max_width(result, key)
   return max
 end
 
+local function get_opt(win, opts)
+  local val = {}
+  for _, name in ipairs(opts) do
+    val[name] = vim.api.nvim_get_option_value(name, { win = win })
+  end
+  return val
+end
+
+local function set_opt(win, opts)
+  for name, value in pairs(opts) do
+    vim.api.nvim_set_option_value(name, value, { win = win })
+  end
+end
+
 local function combine(annotate, log)
   local function find_commit(rev)
     for _, entry in ipairs(log) do
@@ -44,14 +58,19 @@ local function setup_window(self)
     vim.cmd('lefta vs')
     annotate_win = vim.api.nvim_get_current_win()
   end)
-  vim.api.nvim_set_option_value('wrap', false, { win = annotate_win })
-  vim.api.nvim_set_option_value('cursorbind', true, { win = win })
-  vim.api.nvim_set_option_value('scrollbind', true, { win = win })
-  vim.api.nvim_set_option_value('cursorline', true, { win = win })
-  vim.api.nvim_set_option_value('cursorbind', true, { win = annotate_win })
-  vim.api.nvim_set_option_value('scrollbind', true, { win = annotate_win })
-  vim.api.nvim_set_option_value('cursorline', true, { win = annotate_win })
-  vim.api.nvim_set_option_value('number', false, { win = annotate_win })
+  self._win_opt = get_opt(win, {'cursorbind', 'scrollbind', 'cursorline'})
+  set_opt(win, {
+    cursorbind = true,
+    scrollbind = true,
+    cursorline = true,
+  })
+  set_opt(annotate_win, {
+    cursorbind = true,
+    scrollbind = true,
+    cursorline = true,
+    wrap = false,
+    number = false,
+  })
   self._annotate_win = annotate_win
 end
 
@@ -153,6 +172,7 @@ local function subscribe(self)
   end})
   local _cm = vim.api.nvim_create_autocmd('CursorMoved', { buffer = annotate_buf, callback = function ()
     update_signs(self)
+    update_popover(self)
   end})
   local cm = vim.api.nvim_create_autocmd('CursorMoved', { buffer = buf, callback = function ()
     update_signs(self)
@@ -184,6 +204,7 @@ function UiAnnotate.close(self)
   vim.api.nvim_win_close(self._annotate_win, true)
   vim.api.nvim_buf_delete(self._annotate_buf, { force = true })
   vim.fn.sign_unplace('CVSAnnotateRev', {buffer = self.buf})
+  set_opt(self.win, self._win_opt)
 end
 
 --- Open annotate ui for single file
