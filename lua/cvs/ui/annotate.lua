@@ -91,11 +91,13 @@ local function setup_window(self)
     cursorbind = true,
     scrollbind = true,
     cursorline = true,
+    scrollopt = 'ver,jump',
   })
   win_set_opts(annotate_win, {
     cursorbind = true,
     scrollbind = true,
     cursorline = true,
+    scrollopt = 'ver,jump',
     wrap = false,
     number = false,
   })
@@ -285,6 +287,9 @@ function UiAnnotate.open(self)
   subscribe(self)
   update_annotate(self)
   update_signs(self)
+  vim.api.nvim_win_call(self.win, function ()
+    vim.cmd.syncbind()
+  end)
 end
 
 function UiAnnotate.close(self)
