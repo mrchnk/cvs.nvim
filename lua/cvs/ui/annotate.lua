@@ -315,7 +315,9 @@ return function (opts)
     end)
     buf = vim.api.nvim_win_get_buf(win)
   end
-  local annotate = cvs_annotate(file, {})
+  local annotate = cvs_annotate(file, {
+    rev = opts.rev,
+  })
   local log = cvs_log({file}, {})
   setmetatable({
     buf = buf,
