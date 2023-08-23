@@ -2,6 +2,7 @@ local cvs_annotate = require('cvs.annotate')
 local cvs_log = require('cvs.log')
 local cvs_hl = require('cvs.ui.highlight')
 local buf_from_file = require('cvs.utils.buf_from_file')
+local buf_from_rev = require('cvs.utils.buf_from_rev')
 local popover = require('cvs.ui.popover')
 
 local annotate_sign = '┃'
@@ -304,17 +305,17 @@ return function (opts)
   else
     win = vim.api.nvim_get_current_win()
   end
-  local buf
   local file
   if opts.file then
     file = opts.file
-    buf = buf_from_file(file)
   else
     vim.api.nvim_win_call(win, function ()
       file = vim.fn.expand('%')
     end)
-    buf = vim.api.nvim_win_get_buf(win)
   end
+  local buf = opts.buf or
+    opts.rev and buf_from_rev(file, opts.rev) or
+    buf_from_file(file)
   local annotate = cvs_annotate(file, {
     rev = opts.rev,
   })
@@ -323,6 +324,7 @@ return function (opts)
     buf = buf,
     win = win,
     file = file,
+    rev = opts.rev or 'HEAD',
     _annotate = combine(annotate, log),
   }, {
     __index = UiAnnotate

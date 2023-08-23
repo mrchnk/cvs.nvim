@@ -1,18 +1,14 @@
 local cvs_up = require('cvs.up')
 
 local function open_buffer(name, body, filetype)
-  local bufnr = vim.fn.bufnr(name)
-  if bufnr > 0 then
-    return bufnr
-  end
-  bufnr = vim.api.nvim_create_buf(true, true)
-  vim.api.nvim_buf_set_name(bufnr, name)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, body)
-  vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
+  local buf = vim.api.nvim_create_buf(true, true)
+  vim.api.nvim_buf_set_name(buf, name)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, true, body)
+  vim.api.nvim_buf_set_option(buf, 'modifiable', false)
   if filetype then
-    vim.api.nvim_buf_set_option(bufnr, 'filetype', filetype)
+    vim.api.nvim_buf_set_option(buf, 'filetype', filetype)
   end
-  return bufnr
+  return buf
 end
 
 local function get_name(file, rev)
@@ -26,10 +22,14 @@ local function get_name(file, rev)
 end
 
 return function (file, rev, body)
+  local name = string.format('%s -r%s', file, rev)
+  local buf = vim.fn.bufnr(name)
+  if buf > 0 then
+    return buf
+  end
   if not body then
     body = cvs_up(file, rev).body
   end
-  local name = string.format('%s -r%s', file, rev)
   local filetype = vim.filetype.match{ filename = file }
   return open_buffer(name, body, filetype)
 end

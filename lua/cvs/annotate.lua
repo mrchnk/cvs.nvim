@@ -2,7 +2,7 @@ local make_args = require('cvs.utils.make_args')
 
 local function cvs_annotate(file, opts)
   local cmd = string.format('cvs annotate %s 2>/dev/null', table.concat({
-    make_args(opts.rev, '-r'),
+    make_args({opts.rev}, '-r'),
     make_args({file}),
   }, ' '))
   local out = vim.fn.systemlist(cmd)
