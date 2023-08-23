@@ -4,6 +4,7 @@ local cvs_hl = require('cvs.ui.highlight')
 local buf_from_file = require('cvs.utils.buf_from_file')
 local popover = require('cvs.ui.popover')
 
+local annotate_sign = '┃'
 local annotate_sign_id = 'CVSAnnotateRev'
 local UiAnnotate = {}
 
@@ -145,8 +146,8 @@ local function update_signs(self)
     vim.fn.sign_unplace(annotate_sign_id, {buffer = self.buf})
     if line.rev then
       local t = line.ts and get_temp(line.ts, self._min_ts, self._max_ts) or 0
-      vim.fn.sign_define('CVSAnnotateRev', {
-        text = '┃',
+      vim.fn.sign_define(annotate_sign_id, {
+        text = annotate_sign,
         texthl = cvs_hl.get_annotate_fg(t),
       })
       vim.fn.sign_placelist(self._signs[line.rev])
@@ -237,7 +238,7 @@ local function update_annotate(self)
       vim.api.nvim_buf_add_highlight(buf, 0, cvs_hl.id.author, idx-1, 0, widths[1])
     end
     if entry.ts then
-      local t = (entry.ts - min_ts) / (max_ts - min_ts)
+      local t = get_temp(entry.ts, min_ts, max_ts)
       vim.api.nvim_buf_add_highlight(buf, 0, cvs_hl.get_annotate(t), idx-1, widths[1] + widths[2] + 2, widths[1] + widths[2] + widths[3] + 2)
     end
   end

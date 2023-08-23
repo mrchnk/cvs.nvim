@@ -1,7 +1,7 @@
 local cmd = require('cvs.cmd')
-local hi = require('cvs.ui.highlight')
+local cvs_hl = require('cvs.ui.highlight')
 
-hi.setup()
+cvs_hl.setup()
 
 vim.api.nvim_create_user_command("CVSDiff", cmd.diff, {
   desc = 'Show diff for selected file(s) and revision(s) or cwd status',
