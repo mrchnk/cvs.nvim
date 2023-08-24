@@ -92,6 +92,7 @@ local function setup_window(self)
     scrollbind = true,
     cursorline = true,
     scrollopt = 'ver,jump',
+    wrap = false,
   })
   win_set_opts(annotate_win, {
     cursorbind = true,
