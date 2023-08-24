@@ -290,6 +290,7 @@ local function on_select(self)
     self.buf = buf
     self.rev = rev
     self._annotate = annotate
+    self._signs_rev = nil
     vim.api.nvim_win_set_buf(self.win, buf)
     vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function () self:close() end, {})
     update_annotate(self)
@@ -315,6 +316,7 @@ local function go_back(self)
     self.buf = prev.buf
     self._annotate = prev.annotate
     self._prev = prev.prev
+    self._signs_rev = nil
     vim.api.nvim_win_set_buf(self.win, self.buf)
     vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function () self:close() end, {})
     update_annotate(self)
