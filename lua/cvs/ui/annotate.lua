@@ -101,6 +101,7 @@ local function setup_window(self)
     scrollopt = 'ver,jump',
     wrap = false,
     number = false,
+    signcolumn = 'no',
   })
   self._annotate_win = annotate_win
 end
@@ -231,7 +232,7 @@ local function update_annotate(self)
   local lines, meta, widths = build_annotate(self)
   local buf = self._annotate_buf
   local win = self._annotate_win
-  local width = max_width(lines) + 2
+  local width = max_width(lines)
   local min_ts, max_ts = minmax(meta, function (entry) return entry.ts end)
   self._min_ts = min_ts
   self._max_ts = max_ts
