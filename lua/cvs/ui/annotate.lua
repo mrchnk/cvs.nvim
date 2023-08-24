@@ -299,7 +299,7 @@ function UiAnnotate.close(self)
   self._popover:close()
   vim.api.nvim_win_close(self._annotate_win, true)
   vim.api.nvim_buf_delete(self._annotate_buf, { force = true })
-  vim.fn.sign_unplace('CVSAnnotateRev', {buffer = self.buf})
+  vim.fn.sign_unplace(annotate_sign_id, {buffer = self.buf})
   win_set_opts(self.win, self._win_opt)
 end
 

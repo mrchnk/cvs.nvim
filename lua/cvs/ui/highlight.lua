@@ -9,7 +9,7 @@ local id = {
 
 local _autocmd
 
-local function clr_mix(clr1, clr2, lambda)
+local function gradient(clr1, clr2, lambda)
   local clr = {}
   for i = 1, 3 do
     clr[i] = math.floor(clr1[i] * (1-lambda) + clr2[i] * lambda)
@@ -52,7 +52,7 @@ local function _setup(opts)
   local cold_clr = {0, 0, 255}
   local hot_clr = {255, 0, 0}
   for i = 1, 100 do
-    local clr = clr_str(clr_mix(cold_clr, hot_clr, (i-1)/99))
+    local clr = clr_str(gradient(cold_clr, hot_clr, (i-1)/99))
     local annotate_id = string.format('CVSAnnotate_%02d', i-1)
     local annotate_fg_id = string.format('CVSAnnotateFg_%02d', i-1)
     vim.api.nvim_set_hl(ns, annotate_id, { bg = clr, fg = 'White' })
