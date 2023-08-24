@@ -21,11 +21,14 @@ function Popover.open(self)
       height = height,
       border = 'single',
       title = 'Commit info',
+      title_pos = 'center',
+      noautocmd = true,
       style = 'minimal',
       col = (vim.o.columns - width) / 2,
       row = (vim.o.lines - height) / 2,
     }
     local win = vim.api.nvim_open_win(buf, false, conf)
+    vim.api.nvim_set_option_value('scrollbind', false, { win = win })
     self._buf = buf
     self._win = win
   end
