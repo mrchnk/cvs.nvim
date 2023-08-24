@@ -40,7 +40,18 @@ local function minmax(tbl, fn)
 end
 
 local function get_temp(x, a, b)
+  if a == b then
+    return 0
+  end
   return (x - a) / (b - a)
+end
+
+local function find_lnum(lines, needle)
+  for idx, line in ipairs(lines) do
+    if line.rev == needle.rev and line.line == needle.line then
+      return idx
+    end
+  end
 end
 
 local function win_get_opts(win, opts)
@@ -112,7 +123,7 @@ local function get_line(self)
     return nil
   end
   local idx = vim.api.nvim_win_get_cursor(self.win)[1]
-  return self._meta[idx]
+  return self._meta[idx], idx
 end
 
 local function format_commit(commit)
@@ -129,52 +140,6 @@ local function format_commit(commit)
   end
   return lines
 end
-
-local function get_cursor_line(self)
-  return 10
-end
-
-local function update_popover(self)
-  local line = get_line(self)
-  if line and line.commit and self._popover_enabled then
-    self._popover:open()
-    self._popover:move_to(10, get_cursor_line(self))
-    self._popover:set_text(format_commit(line.commit))
-  else
-    self._popover:close()
-  end
-end
-
-local function update_signs(self)
-  local line = get_line(self) or {}
-  if self._signs_rev ~= line.rev then
-    self._signs_rev = line.rev
-    vim.fn.sign_unplace(annotate_sign_id, {buffer = self.buf})
-    if line.rev then
-      local t = line.ts and get_temp(line.ts, self._min_ts, self._max_ts) or 0
-      vim.fn.sign_define(annotate_sign_id, {
-        text = annotate_sign,
-        texthl = cvs_hl.get_annotate_fg(t),
-      })
-      vim.fn.sign_placelist(self._signs[line.rev])
-    end
-  end
-end
-
-local function setup_buffer(self)
-  local annotate_win = self._annotate_win
-  local annotate_buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_win_set_buf(annotate_win, annotate_buf)
-  self._annotate_buf = annotate_buf
-end
-
-local function setup_popover(self)
-  self._popover = popover{
-    buf = self._annotate_buf,
-    win = self._annotate_win,
-  }
-end
-
 
 local function build_annotate(self)
   local meta = vim.deepcopy(self._annotate)
@@ -229,6 +194,24 @@ local function build_signs(self, meta)
   return signs
 end
 
+local function get_cursor_line(self)
+  return 10
+end
+
+local function setup_buffer(self)
+  local annotate_win = self._annotate_win
+  local annotate_buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(annotate_win, annotate_buf)
+  self._annotate_buf = annotate_buf
+end
+
+local function setup_popover(self)
+  self._popover = popover{
+    buf = self._annotate_buf,
+    win = self._annotate_win,
+  }
+end
+
 local function update_annotate(self)
   local lines, meta, widths = build_annotate(self)
   local buf = self._annotate_buf
@@ -252,9 +235,97 @@ local function update_annotate(self)
   self._signs = build_signs(self, meta)
 end
 
+local function update_signs(self)
+  local line = get_line(self) or {}
+  if self._signs_rev ~= line.rev then
+    self._signs_rev = line.rev
+    vim.fn.sign_unplace(annotate_sign_id, {buffer = self.buf})
+    if line.rev then
+      local t = line.ts and get_temp(line.ts, self._min_ts, self._max_ts) or 0
+      vim.fn.sign_define(annotate_sign_id, {
+        text = annotate_sign,
+        texthl = cvs_hl.get_annotate_fg(t),
+      })
+      vim.fn.sign_placelist(self._signs[line.rev])
+    end
+  end
+end
+
+local function update_popover(self)
+  local line = get_line(self)
+  if line and line.commit and self._popover_enabled then
+    self._popover:open()
+    self._popover:move_to(10, get_cursor_line(self))
+    self._popover:set_text(format_commit(line.commit))
+  else
+    self._popover:close()
+  end
+end
+
+local function syncbind(win)
+  vim.api.nvim_win_call(win, function ()
+    vim.cmd.syncbind()
+  end)
+end
+
+
+local function on_select(self)
+  local line, idx = get_line(self)
+  if line and line.rev and self.rev ~= line.rev then
+    vim.fn.sign_unplace(annotate_sign_id, {buffer = self.buf})
+    vim.api.nvim_buf_del_user_command(self.buf, cmd_id.annotate)
+    local file = self.file
+    local rev = line.rev
+    local buf = buf_from_rev(file, rev)
+    local annotate = combine(cvs_annotate(file, {rev = rev}), cvs_log({file}, {rev = rev}))
+    local view = vim.fn.winsaveview()
+    self._prev = {
+      file = file,
+      rev = self.rev,
+      buf = self.buf,
+      annotate = self._annotate,
+      prev = self._prev,
+      view = view
+    }
+    self.buf = buf
+    self.rev = rev
+    self._annotate = annotate
+    vim.api.nvim_win_set_buf(self.win, buf)
+    vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function () self:close() end, {})
+    update_annotate(self)
+    update_signs(self)
+    local lnum = find_lnum(self._meta, line)
+    if lnum then
+      vim.fn.winrestview({
+        lnum = lnum,
+        topline = view.topline + lnum - idx,
+      })
+    end
+    syncbind(self._annotate_win)
+  end
+end
+
+local function go_back(self)
+  local prev = self._prev
+  if prev then
+    vim.fn.sign_unplace(annotate_sign_id, {buffer = self.buf})
+    vim.api.nvim_buf_del_user_command(self.buf, cmd_id.annotate)
+    self.file = prev.file
+    self.rev = prev.rev
+    self.buf = prev.buf
+    self._annotate = prev.annotate
+    self._prev = prev.prev
+    vim.api.nvim_win_set_buf(self.win, self.buf)
+    vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function () self:close() end, {})
+    update_annotate(self)
+    update_signs(self)
+    vim.fn.winrestview(prev.view)
+    syncbind(self._annotate_win)
+  end
+end
+
 local function subscribe(self)
   local annotate_buf = self._annotate_buf
-  local buf = self.buf
   local _be = vim.api.nvim_create_autocmd('BufEnter', { buffer = annotate_buf, callback = function ()
     self._popover_enabled = true
     update_popover(self)
@@ -267,11 +338,15 @@ local function subscribe(self)
     update_signs(self)
     update_popover(self)
   end})
-  local cm = vim.api.nvim_create_autocmd('CursorMoved', { buffer = buf, callback = function ()
-    update_signs(self)
+  local cm = vim.api.nvim_create_autocmd('CursorMoved', { callback = function (event)
+    if event.buf == self.buf then
+      update_signs(self)
+    end
   end})
-  vim.api.nvim_buf_create_user_command(buf, cmd_id.annotate, function () self:close() end, {})
+  vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function () self:close() end, {})
   vim.api.nvim_buf_create_user_command(annotate_buf, cmd_id.annotate, function () self:close() end, {})
+  vim.keymap.set('n', '<CR>', function() on_select(self) end, { noremap = true, buffer = annotate_buf })
+  vim.keymap.set('n', '<BS>', function() go_back(self) end, { noremap = true, buffer = annotate_buf })
   self._autocmd = {_be, _bl, _cm, cm}
 end
 
@@ -290,9 +365,7 @@ function UiAnnotate.open(self)
   subscribe(self)
   update_annotate(self)
   update_signs(self)
-  vim.api.nvim_win_call(self.win, function ()
-    vim.cmd.syncbind()
-  end)
+  syncbind(self.win)
 end
 
 function UiAnnotate.close(self)
