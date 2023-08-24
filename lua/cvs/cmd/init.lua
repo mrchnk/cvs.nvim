@@ -1,12 +1,5 @@
-local id = {
-  log = 'CVSLog',
-  diff = 'CVSDiff',
-  annotate = 'CVSAnnotate',
-  commit = 'CVSCommit',
-}
-
 return {
-  id = id,
+  id = require('cvs.cmd.id'),
   diff = require("cvs.cmd.diff"),
   log = require('cvs.cmd.log'),
   commit = require('cvs.cmd.commit'),

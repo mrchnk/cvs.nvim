@@ -1,5 +1,6 @@
 local cvs_annotate = require('cvs.annotate')
 local cvs_log = require('cvs.log')
+local cmd_id = require('cvs.cmd.id')
 local cvs_hl = require('cvs.ui.highlight')
 local buf_from_file = require('cvs.utils.buf_from_file')
 local buf_from_rev = require('cvs.utils.buf_from_rev')
@@ -269,8 +270,8 @@ local function subscribe(self)
   local cm = vim.api.nvim_create_autocmd('CursorMoved', { buffer = buf, callback = function ()
     update_signs(self)
   end})
-  vim.api.nvim_buf_create_user_command(buf, 'CVSAnnotate', function () self:close() end, {})
-  vim.api.nvim_buf_create_user_command(annotate_buf, 'CVSAnnotate', function () self:close() end, {})
+  vim.api.nvim_buf_create_user_command(buf, cmd_id.annotate, function () self:close() end, {})
+  vim.api.nvim_buf_create_user_command(annotate_buf, cmd_id.annotate, function () self:close() end, {})
   self._autocmd = {_be, _bl, _cm, cm}
 end
 
@@ -278,8 +279,8 @@ local function unsubscribe(self)
   for _, id in ipairs(self._autocmd) do
     vim.api.nvim_del_autocmd(id)
   end
-  vim.api.nvim_buf_del_user_command(self._annotate_buf, 'CVSAnnotate')
-  vim.api.nvim_buf_del_user_command(self.buf, 'CVSAnnotate')
+  vim.api.nvim_buf_del_user_command(self._annotate_buf, cmd_id.annotate)
+  vim.api.nvim_buf_del_user_command(self.buf, cmd_id.annotate)
 end
 
 function UiAnnotate.open(self)
