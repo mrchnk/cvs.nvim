@@ -67,28 +67,6 @@ local function win_set_opts(win, opts)
   end
 end
 
-local function combine(annotate, log)
-  local function find_commit(rev)
-    for _, entry in ipairs(log) do
-      for _, commit in ipairs(entry.commits) do
-        if commit.rev == rev then
-          return commit
-        end
-      end
-    end
-  end
-  return vim.tbl_map(function (entry)
-    local commit = find_commit(entry.rev)
-    return {
-      rev = entry.rev,
-      author = commit and commit.author or entry.author,
-      date = entry.date,
-      ts = commit and commit.ts or nil,
-      line = entry.line,
-      commit = commit,
-    }
-  end, annotate)
-end
 
 local function setup_window(self)
   local win = self.win
@@ -276,7 +254,6 @@ local function on_select(self)
     local file = self.file
     local rev = line.rev
     local buf = buf_from_rev(file, rev)
-    local annotate = combine(cvs.annotate(file, {rev = rev}), cvs.log({file}, {rev = rev}))
     local view = vim.fn.winsaveview()
     self._prev = {
       file = file,
@@ -288,7 +265,7 @@ local function on_select(self)
     }
     self.buf = buf
     self.rev = rev
-    self._annotate = annotate
+    self._annotate = cvs.annotate(file, { rev = rev })
     self._signs_rev = nil
     vim.api.nvim_win_set_buf(self.win, buf)
     vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function () self:close() end, {})
@@ -398,16 +375,13 @@ return function (opts)
   local buf = opts.buf or
     opts.rev and buf_from_rev(file, opts.rev) or
     buf_from_file(file)
-  local annotate = cvs.annotate(file, {
-    rev = opts.rev,
-  })
-  local log = cvs.log({file}, {})
+  local annotate = cvs.annotate(file, { rev = opts.rev })
   setmetatable({
     buf = buf,
     win = win,
     file = file,
     rev = opts.rev or 'HEAD',
-    _annotate = combine(annotate, log),
+    _annotate = annotate,
   }, {
     __index = UiAnnotate
   }):open()
