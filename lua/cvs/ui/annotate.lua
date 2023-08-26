@@ -39,10 +39,10 @@ local function minmax(tbl, fn)
   return min, max
 end
 
-local function find_lnum(lines, needle)
-  for idx, line in ipairs(lines) do
-    if line.rev == needle.rev and line.line == needle.line then
-      return idx
+local function find_lnum(annotate, needle)
+  for lnum, entry in ipairs(annotate) do
+    if entry.rev == needle.rev and entry.line == needle.line then
+      return lnum
     end
   end
 end
@@ -61,7 +61,6 @@ local function win_set_opts(win, opts)
   end
 end
 
-
 local function setup_window(self)
   local win = self.win
   local annotate_win
@@ -69,7 +68,7 @@ local function setup_window(self)
     vim.cmd('lefta vs')
     annotate_win = vim.api.nvim_get_current_win()
   end)
-  self._win_opt = win_get_opts(win, {'cursorbind', 'scrollbind', 'cursorline'})
+  self._win_opt = win_get_opts(win, {'cursorbind', 'scrollbind', 'cursorline', 'scrollopt', 'wrap'})
   win_set_opts(win, {
     cursorbind = true,
     scrollbind = true,
@@ -89,12 +88,12 @@ local function setup_window(self)
   self._annotate_win = annotate_win
 end
 
-local function get_line(self)
+local function get_cur_entry(self)
   if not self._meta then
     return nil
   end
-  local idx = vim.api.nvim_win_get_cursor(self.win)[1]
-  return self._meta[idx], idx
+  local lnum = vim.api.nvim_win_get_cursor(self.win)[1]
+  return self._meta[lnum]
 end
 
 local function build_annotate(self)
@@ -102,12 +101,12 @@ local function build_annotate(self)
   local buf = self.buf
   local a = table.concat(vim.tbl_map(function (entry) return entry.line end, meta), '\n')
   local b = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, true), '\n')
-  local function replace(idx, len, cnt, val)
+  local function replace(lnum, len, cnt, val)
     for _ = 1, len do
-      table.remove(meta, idx)
+      table.remove(meta, lnum)
     end
     for _ = 1, cnt do
-      table.insert(meta, idx, val)
+      table.insert(meta, lnum, val)
     end
   end
   local shift = 0
@@ -120,18 +119,7 @@ local function build_annotate(self)
       shift = shift + b_c
     end
   end})
-  local max_author_width = max_width(meta, 'author')
-  local max_rev_width = max_width(meta, 'rev') + 2
-  local max_date_width = max_width(meta, 'date')
-  local fmt = string.format('%%-%ds %%%ds %%%ds', max_author_width, max_rev_width, max_date_width)
-  local lines = vim.tbl_map(function (entry)
-    if not entry.author then
-      return entry.line
-    else
-      return string.format(fmt, entry.author, '-r' .. entry.rev, entry.date)
-    end
-  end, meta)
-  return lines, meta, {max_author_width, max_rev_width, max_date_width}
+  return meta
 end
 
 local function get_cursor_line(self)
@@ -147,27 +135,44 @@ end
 
 local function setup_popover(self)
   self._popover = Popover{
-    buf = self._annotate_buf,
     win = self._annotate_win,
   }
 end
 
 local function update_annotate(self)
-  local lines, meta, widths = build_annotate(self)
   local buf = self._annotate_buf
   local win = self._annotate_win
+  local meta = build_annotate(self)
+  local max_author_width = max_width(meta, 'author')
+  local max_rev_width = max_width(meta, 'rev') + 2
+  local max_date_width = max_width(meta, 'date')
+  local fmt = string.format('%%-%ds %%%ds %%%ds', max_author_width, max_rev_width, max_date_width)
+  local lines = vim.tbl_map(function (entry)
+    if not entry.author then
+      return entry.line
+    else
+      return string.format(fmt, entry.author, '-r' .. entry.rev, entry.date)
+    end
+  end, meta)
   local width = max_width(lines)
   local min_ts, max_ts = minmax(meta, function (entry) return entry.ts end)
   vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
   vim.api.nvim_win_set_width(win, width)
-  for idx, entry in ipairs(meta) do
+  local author_range = {
+    0,
+    max_author_width,
+  }
+  local date_range = {
+    max_author_width + max_rev_width + 2,
+    max_author_width + max_rev_width + max_date_width + 2,
+  }
+  for lnum, entry in ipairs(meta) do
     if entry.author then
-      vim.api.nvim_buf_add_highlight(buf, 0, cvs_hl.id.author, idx-1, 0, widths[1])
-    end
-    if entry.ts then
       local temp = get_temp(entry.ts, min_ts, max_ts)
+      local hl = cvs_hl.get_annotate(temp)
       entry.temp = temp
-      vim.api.nvim_buf_add_highlight(buf, 0, cvs_hl.get_annotate(temp), idx-1, widths[1] + widths[2] + 2, widths[1] + widths[2] + widths[3] + 2)
+      vim.api.nvim_buf_add_highlight(buf, 0, cvs_hl.id.author, lnum-1, unpack(author_range))
+      vim.api.nvim_buf_add_highlight(buf, 0, hl, lnum-1, unpack(date_range))
     end
   end
   self._meta = meta
@@ -178,16 +183,16 @@ local function update_annotate(self)
 end
 
 local function update_signs(self)
-  local line = get_line(self) or {}
-  self._signs:open(line.rev)
+  local entry = get_cur_entry(self) or {}
+  self._signs:open(entry.rev)
 end
 
 local function update_popover(self)
-  local line = get_line(self)
-  if line and line.commit and self._popover_enabled then
+  local entry = get_cur_entry(self)
+  if entry and entry.commit and self._popover_enabled then
     self._popover:open()
     self._popover:move_to(10, get_cursor_line(self))
-    self._popover:set_text(format_commit(line.commit))
+    self._popover:set_text(format_commit(entry.commit))
   else
     self._popover:close()
   end
@@ -200,12 +205,12 @@ local function syncbind(win)
 end
 
 local function on_select(self)
-  local line, idx = get_line(self)
-  if line and line.rev and self.rev ~= line.rev then
+  local entry = get_cur_entry(self)
+  if entry and entry.rev and self.rev ~= entry.rev then
     self._signs:close()
     vim.api.nvim_buf_del_user_command(self.buf, cmd_id.annotate)
     local file = self.file
-    local rev = line.rev
+    local rev = entry.rev
     local buf = buf_from_rev(file, rev)
     local view = vim.fn.winsaveview()
     self._prev = {
@@ -223,13 +228,16 @@ local function on_select(self)
     vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function () self:close() end, {})
     update_annotate(self)
     update_signs(self)
-    local lnum = find_lnum(self._meta, line)
+    local lnum = find_lnum(self._meta, entry)
     if lnum then
       vim.fn.winrestview({
         lnum = lnum,
-        topline = view.topline + lnum - idx,
+        topline = view.topline + lnum - lnum,
       })
     end
+    syncbind(self._annotate_win)
+    -- ???
+    syncbind(self._annotate_win)
     syncbind(self._annotate_win)
   end
 end
