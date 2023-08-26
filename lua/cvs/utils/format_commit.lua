@@ -53,8 +53,10 @@ return function (commit, prompt)
       table.insert(lines, string.format('  %-' .. max_file_len .. 's  -r%s', file.file, file.rev))
       if prompt and #prompt > 0 then
         for word in vim.gsplit(lo_prompt, '%s+', {trimempty = true}) do
-          for _, pos in ipairs(fzy.positions(word, file.file)) do
-            table.insert(matches, {#lines, pos+2, 1})
+          if fzy.has_match(word, file.file) then
+            for _, pos in ipairs(fzy.positions(word, file.file)) do
+              table.insert(matches, {#lines, pos+2, 1})
+            end
           end
         end
       end

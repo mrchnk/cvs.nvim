@@ -4,6 +4,7 @@ local cvs_hl = require('cvs.ui.highlight')
 local buf_from_file = require('cvs.utils.buf_from_file')
 local buf_from_rev = require('cvs.utils.buf_from_rev')
 local get_temp = require('cvs.utils.get_temp')
+local format_commit = require('cvs.utils.format_commit')
 local Popover = require('cvs.ui.popover')
 local Signs = require('cvs.ui.annotate_signs')
 
@@ -94,21 +95,6 @@ local function get_line(self)
   end
   local idx = vim.api.nvim_win_get_cursor(self.win)[1]
   return self._meta[idx], idx
-end
-
-local function format_commit(commit)
-  local author = commit.author
-  local date = commit.date
-  local message = commit.message
-  local lines = {
-    string.format('Author: %s', author),
-    string.format('Date:   %s', date),
-    '',
-  }
-  for _, line in ipairs(message) do
-    table.insert(lines, '    ' .. line)
-  end
-  return lines
 end
 
 local function build_annotate(self)
