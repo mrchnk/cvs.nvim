@@ -1,5 +1,5 @@
 local finders = require('telescope.finders')
-local cvs_log = require('cvs.log')
+local cvs_log = require('cvs.sys.log')
 local cvs_hl = require('cvs.ui.highlight')
 
 local function make_entry(log_entry)

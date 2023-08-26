@@ -1,5 +1,5 @@
 local finders = require('telescope.finders')
-local cvs_diff = require('cvs.diff')
+local cvs_diff = require('cvs.sys.diff')
 local cvs_hl = require('cvs.ui.highlight')
 
 local function change(e)

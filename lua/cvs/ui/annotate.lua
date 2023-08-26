@@ -1,5 +1,5 @@
-local cvs_annotate = require('cvs.annotate')
-local cvs_log = require('cvs.log')
+local cvs_annotate = require('cvs.sys.annotate')
+local cvs_log = require('cvs.sys.log')
 local cmd_id = require('cvs.cmd.id')
 local cvs_hl = require('cvs.ui.highlight')
 local buf_from_file = require('cvs.utils.buf_from_file')

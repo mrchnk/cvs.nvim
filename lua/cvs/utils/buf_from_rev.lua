@@ -1,4 +1,4 @@
-local cvs_up = require('cvs.up')
+local cvs_up = require('cvs.sys.up')
 
 local function open_buffer(name, body, filetype)
   local buf = vim.api.nvim_create_buf(true, true)
