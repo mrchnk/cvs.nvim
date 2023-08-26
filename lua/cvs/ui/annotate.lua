@@ -1,5 +1,4 @@
-local cvs_annotate = require('cvs.sys.annotate')
-local cvs_log = require('cvs.sys.log')
+local cvs = require('cvs.sys')
 local cmd_id = require('cvs.cmd.id')
 local cvs_hl = require('cvs.ui.highlight')
 local buf_from_file = require('cvs.utils.buf_from_file')
@@ -277,7 +276,7 @@ local function on_select(self)
     local file = self.file
     local rev = line.rev
     local buf = buf_from_rev(file, rev)
-    local annotate = combine(cvs_annotate(file, {rev = rev}), cvs_log({file}, {rev = rev}))
+    local annotate = combine(cvs.annotate(file, {rev = rev}), cvs.log({file}, {rev = rev}))
     local view = vim.fn.winsaveview()
     self._prev = {
       file = file,
@@ -399,10 +398,10 @@ return function (opts)
   local buf = opts.buf or
     opts.rev and buf_from_rev(file, opts.rev) or
     buf_from_file(file)
-  local annotate = cvs_annotate(file, {
+  local annotate = cvs.annotate(file, {
     rev = opts.rev,
   })
-  local log = cvs_log({file}, {})
+  local log = cvs.log({file}, {})
   setmetatable({
     buf = buf,
     win = win,

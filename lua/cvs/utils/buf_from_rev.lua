@@ -1,4 +1,4 @@
-local cvs_up = require('cvs.sys.up')
+local cvs = require('cvs.sys')
 
 local function open_buffer(name, body, filetype)
   local buf = vim.api.nvim_create_buf(true, true)
@@ -28,7 +28,7 @@ return function (file, rev, body)
     return buf
   end
   if not body then
-    body = cvs_up(file, rev).body
+    body = cvs.up(file, rev).body
   end
   local filetype = vim.filetype.match{ filename = file }
   return open_buffer(name, body, filetype)

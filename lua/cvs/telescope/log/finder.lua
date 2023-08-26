@@ -1,5 +1,5 @@
 local finders = require('telescope.finders')
-local cvs_log = require('cvs.sys.log')
+local cvs = require('cvs.sys')
 local cvs_hl = require('cvs.ui.highlight')
 
 local function make_entry(log_entry)
@@ -94,7 +94,7 @@ local function make_cmd_finder(files, opts)
     else
       _opts.date_range = string.format('%s day ago<=%s day ago', day, day-1)
     end
-    local log = cvs_log(files, _opts)
+    local log = cvs.log(files, _opts)
     for _, v in ipairs(make_commits_log(log)) do
       local entry = make_entry(v)
       idx = idx + 1
@@ -152,7 +152,7 @@ return function (finder_opts)
   else
     local files = finder_opts.files or {}
     local opts = finder_opts.opts or {}
-    local results = cvs_log(files, opts)
+    local results = cvs.log(files, opts)
     local finder = make_table_finder(results)
     finder._files = files
     return finder

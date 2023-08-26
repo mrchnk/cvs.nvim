@@ -3,9 +3,7 @@ local action_state = require('telescope.actions.state')
 local builtin = require('telescope.builtin')
 local ui_diff = require('cvs.ui.diff')
 local ui_commit = require('cvs.ui.commit')
-local cvs_revert = require('cvs.sys.revert')
-local cvs_add = require('cvs.sys.add')
-local cvs_remove = require('cvs.sys.remove')
+local cvs = require('cvs.sys')
 local buf_from_rev = require('cvs.utils.buf_from_rev')
 local buf_from_file = require('cvs.utils.buf_from_file')
 local make_finder = require('cvs.telescope.diff.finder')
@@ -91,15 +89,15 @@ local function revert_file(bufnr)
     local rev2 = entry.value.rev2
     if rev2 == 'HEAD' then
       if rev1 then
-        cvs_revert({file})
+        cvs.revert({file})
       else
-        cvs_remove({file})
+        cvs.remove({file})
       end
     elseif rev2 then
       error('Cannot revert from log entry')
     elseif rev1 then
-      cvs_add(file)
-      cvs_revert({file})
+      cvs.add(file)
+      cvs.revert({file})
     else
       error('File is not in CVS or added')
     end
@@ -162,7 +160,7 @@ local function add_file(bufnr)
   if rev1 or rev2 then
     error('File is under CVS')
   end
-  cvs_add(file)
+  cvs.add(file)
   _refresh_finder(bufnr)
 end
 

@@ -1,5 +1,5 @@
 local finders = require('telescope.finders')
-local cvs_diff = require('cvs.sys.diff')
+local cvs = require('cvs.sys')
 local cvs_hl = require('cvs.ui.highlight')
 
 local function change(e)
@@ -60,7 +60,7 @@ return function (finder_options)
   else
     local files = finder_options.files or {}
     local opts = finder_options.opts or {}
-    local results = cvs_diff(files, opts)
+    local results = cvs.diff(files, opts)
     if not opts.rev_date then
       -- diff last rev with current
       if #files == 0 then
