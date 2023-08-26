@@ -27,8 +27,9 @@ return function (commit, prompt)
   }
   local matches = prompt and {}
   if prompt and #prompt > 0 then
+    local lo_author = string.lower(author)
     for word in vim.gsplit(lo_prompt, '%s+', {trimempty=true}) do
-      if word == string.lower(author) then
+      if word == lo_author then
         table.insert(matches, {1, 9, #word})
       end
       local pos = string.find(date, word, 1, true)
