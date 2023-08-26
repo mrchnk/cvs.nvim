@@ -213,7 +213,6 @@ local function syncbind(win)
   end)
 end
 
-
 local function on_select(self)
   local line, idx = get_line(self)
   if line and line.rev and self.rev ~= line.rev then
@@ -352,3 +351,4 @@ return function (opts)
     __index = Annotate
   })
 end
+
