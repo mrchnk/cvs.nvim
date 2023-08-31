@@ -313,6 +313,7 @@ local function mapkeys(self)
     vim.keymap.set(mode, key, callback, {
       noremap = true,
       buffer = self._annotate_buf,
+      silent = true,
     })
   end
   map('n', '<CR>', function()
