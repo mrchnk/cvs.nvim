@@ -7,6 +7,7 @@ local get_temp = require('cvs.utils.get_temp')
 local format_commit = require('cvs.utils.format_commit')
 local Popover = require('cvs.ui.popover')
 local Signs = require('cvs.ui.annotate_signs')
+local make_commands = require('cvs.ui.annotate_commands')
 
 local Annotate = {}
 
@@ -88,12 +89,10 @@ local function setup_window(self)
   self._annotate_win = annotate_win
 end
 
-local function get_cur_entry(self)
-  if not self._meta then
-    return nil
-  end
+function Annotate.get_cur_entry(self)
   local lnum = vim.api.nvim_win_get_cursor(self.win)[1]
-  return self._meta[lnum], lnum
+  local entry = self._meta and self._meta[lnum] or {}
+  return entry, lnum
 end
 
 local function build_annotate(self)
@@ -185,12 +184,12 @@ local function update_annotate(self)
 end
 
 local function update_signs(self)
-  local entry = get_cur_entry(self) or {}
+  local entry = self:get_cur_entry()
   self._signs:open(entry.rev)
 end
 
 local function update_popover(self)
-  local entry = get_cur_entry(self)
+  local entry = self:get_cur_entry()
   if entry and entry.commit and self._popover_enabled then
     self._popover:open()
     self._popover:move_to(10, get_cursor_line(self))
@@ -206,11 +205,59 @@ local function syncbind(win)
   end)
 end
 
+local function subscribe(self)
+  local autocmd = {}
+  local cmd = {}
+  local function listen(name, buffer, callback)
+    local id = vim.api.nvim_create_autocmd(name, {
+      buffer = buffer,
+      callback = callback,
+    })
+    table.insert(autocmd, id)
+  end
+  local function command(name, buffer, callback)
+    vim.api.nvim_buf_create_user_command(buffer, name, callback, {})
+    table.insert(cmd, {name, buffer})
+  end
+  listen('BufEnter', self._annotate_buf, function ()
+    self._popover_enabled = true
+    update_popover(self)
+  end)
+  listen('BufLeave', self._annotate_buf, function ()
+    self._popover_enabled = false
+    update_popover(self)
+  end)
+  listen('CursorMoved', self._annotate_buf, function ()
+    update_signs(self)
+    update_popover(self)
+  end)
+  listen('CursorMoved', self.buf, function ()
+      update_signs(self)
+  end)
+  for name, callback in make_commands(self) do
+    for _, buf in ipairs{self._annotate_buf, self.buf} do
+      command(name, buf, callback)
+    end
+  end
+  self._autocmd = autocmd
+  self._cmd = cmd
+end
+
+local function unsubscribe(self)
+  for _, id in ipairs(self._autocmd) do
+    vim.api.nvim_del_autocmd(id)
+  end
+  for _, it in ipairs(self._cmd) do
+    local name, buffer = unpack(it)
+    vim.api.nvim_buf_del_user_command(buffer, name)
+  end
+end
+
 local function on_select(self)
-  local entry, lnum = get_cur_entry(self)
+  local entry, lnum = self:get_cur_entry()
   if entry and entry.rev and self.rev ~= entry.rev then
     self._signs:close()
-    vim.api.nvim_buf_del_user_command(self.buf, cmd_id.annotate)
+    unsubscribe(self)
     local file = self.file
     local rev = entry.rev
     local buf = buf_from_rev(file, rev)
@@ -227,7 +274,7 @@ local function on_select(self)
     self.rev = rev
     self._annotate = cvs.annotate(file, { rev = rev })
     vim.api.nvim_win_set_buf(self.win, buf)
-    vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function() self:close() end, {})
+    subscribe(self)
     update_annotate(self)
     update_signs(self)
     local new_lnum = find_lnum(self._meta, entry)
@@ -246,14 +293,14 @@ local function go_back(self)
   local prev = self._prev
   if prev then
     self._signs:close()
-    vim.api.nvim_buf_del_user_command(self.buf, cmd_id.annotate)
+    unsubscribe(self)
     self.file = prev.file
     self.rev = prev.rev
     self.buf = prev.buf
     self._annotate = prev.annotate
     self._prev = prev.prev
     vim.api.nvim_win_set_buf(self.win, self.buf)
-    vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function() self:close() end, {})
+    subscribe(self)
     update_annotate(self)
     update_signs(self)
     vim.fn.winrestview(prev.view)
@@ -261,49 +308,21 @@ local function go_back(self)
   end
 end
 
-local function subscribe(self)
-  local annotate_buf = self._annotate_buf
-  local _be = vim.api.nvim_create_autocmd('BufEnter', {
-    buffer = annotate_buf,
-    callback = function()
-      self._popover_enabled = true
-      update_popover(self)
-    end
-  })
-  local _bl = vim.api.nvim_create_autocmd('BufLeave', {
-    buffer = annotate_buf,
-    callback = function()
-      self._popover_enabled = false
-      update_popover(self)
-    end
-  })
-  local _cm = vim.api.nvim_create_autocmd('CursorMoved', {
-    buffer = annotate_buf,
-    callback = function()
-      update_signs(self)
-      update_popover(self)
-    end
-  })
-  local cm = vim.api.nvim_create_autocmd('CursorMoved', {
-    callback = function(event)
-      if event.buf == self.buf then
-        update_signs(self)
-      end
-    end
-  })
-  vim.api.nvim_buf_create_user_command(self.buf, cmd_id.annotate, function() self:close() end, {})
-  vim.api.nvim_buf_create_user_command(annotate_buf, cmd_id.annotate, function() self:close() end, {})
-  vim.keymap.set('n', '<CR>', function() on_select(self) end, { noremap = true, buffer = annotate_buf })
-  vim.keymap.set('n', '<BS>', function() go_back(self) end, { noremap = true, buffer = annotate_buf })
-  self._autocmd = { _be, _bl, _cm, cm }
-end
-
-local function unsubscribe(self)
-  for _, id in ipairs(self._autocmd) do
-    vim.api.nvim_del_autocmd(id)
+local function mapkeys(self)
+  local function map(mode, key, callback)
+    vim.keymap.set(mode, key, callback, {
+      noremap = true,
+      buffer = self._annotate_buf,
+    })
   end
-  vim.api.nvim_buf_del_user_command(self._annotate_buf, cmd_id.annotate)
-  vim.api.nvim_buf_del_user_command(self.buf, cmd_id.annotate)
+  map('n', '<CR>', function()
+    on_select(self)
+  end)
+  map('n', '<BS>', function()
+    go_back(self)
+  end)
+  map('n', '<TAB>', ':CVSAnnotateNextHunk<CR>')
+  map('n', '<S-TAB>', ':CVSAnnotatePrevHunk<CR>')
 end
 
 function Annotate.open(self)
@@ -311,6 +330,7 @@ function Annotate.open(self)
   setup_buffer(self)
   setup_popover(self)
   subscribe(self)
+  mapkeys(self)
   update_annotate(self)
   update_signs(self)
   syncbind(self.win)
