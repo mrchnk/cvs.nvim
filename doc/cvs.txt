@@ -50,8 +50,8 @@ commits. You will see commit message and changed files in preview window. Press
 `<CR>` on commit to open diff for it.
 
 Following search implemented: match all tokens separated by whitespace ignoring
-case, order does not matter; each token match one of: commit message (substring
-match), filename (fuzzy match), author (exact match).
+case, order does not matter; each token match one of commit message (substring
+match), filename (fuzzy match), date (substring match) or author (exact match).
 
 If no file or directory is passed will use current working directory to fetch
 log (like `cvs log` command do)
