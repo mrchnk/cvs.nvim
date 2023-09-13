@@ -51,15 +51,21 @@ CVSLog
 `:CVSLog [OPTIONS] [FILES OR DIRECTORIES]`                           *:CVSLog*
 ``` -->
 
-Will output log for file or directory, grouping changes by commits.
+Will open Telescope for cvs log of file or directory, grouping changes by
+commits. You will see commit message and changed files in preview window.
+Press `<CR>` on commit to open diff for it.
 
-If no file or directory is passed will use current working directory to
-fetch log (like `cvs log` command)
+Following search implemented: match all tokens separated by whitespace
+ignoring case, order does not matter; each token match one of: commit message
+(substring match), filename (fuzzy match), author (exact match).
+
+If no file or directory is passed will use current working directory to fetch
+log (like `cvs log` command do)
 
 Possible options are:
 
-- `-A author` to filter changes by author (multiple options possible)
-- `-d date_range` to filter changes by date range (same syntax
+* `-A author` to filter changes by author (multiple options possible)
+* `-d date_range` to filter changes by date range (same syntax
   as `cvs log -d`)
 
 Examples:
@@ -76,4 +82,8 @@ This will show changes by mrchnk or nikolai older than 1 year in folder plugin
 
     :CVSLog -A mrchnk -A nikolai -d "<1 year ago" plugin/
 
+Mappings:
 
+* `<CR>` to open diff Telescope for diff of selected commit
+* `<leaeder>d` to compare two checked revisions or one checked revision with
+  current selected one
