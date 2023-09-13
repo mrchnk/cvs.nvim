@@ -1,4 +1,4 @@
-*cvs.txt*                  For                  Last change: 2023 September 13
+*cvs.txt*                  For                  Last change: 2023 September 14
 
 ==============================================================================
 Table of Contents                                      *cvs-table-of-contents*
@@ -43,6 +43,7 @@ Using Packer <https://github.com/wbthomason/packer.nvim>
 
 You can toggle UI with user commands registered by the plugin
 
+------------------------------------------------------------------------------
 `:CVSLog [OPTIONS] [FILES OR DIRECTORIES]`                           *:CVSLog*
 
 Will open Telescope for cvs log of file or directory, grouping changes by
@@ -54,7 +55,7 @@ case, order does not matter; each token match one of commit message (substring
 match), filename (fuzzy match), date (substring match) or author (exact match).
 
 If no file or directory is passed will use current working directory to fetch
-log (like `cvs log` command do)
+log (like `cvs log` command do).
 
 Possible options are:
 
@@ -70,13 +71,13 @@ This will show changes in current working directory for last week:
     :CVSLog -d ">1 week ago"
 <
 
-This will show changes during July 2023 for files README.md and LICENSE
+This will show changes during July 2023 for files README.md and LICENSE:
 
 >
     :CVSLog -d 2023-07-01>2023-08-01 README.md LICENSE
 <
 
-This will show changes by mrchnk or nikolai older than 1 year in folder plugin
+This will show changes by mrchnk or nikolai older than 1 year in folder plugin:
 
 >
     :CVSLog -A mrchnk -A nikolai -d "<1 year ago" plugin/
@@ -84,7 +85,7 @@ This will show changes by mrchnk or nikolai older than 1 year in folder plugin
 
 Mappings:
 
-- `<CR>` to open diff Telescope for diff of selected commit
+- `<CR>` to open diff for selected commit
 - `<leaeder>d` to compare two checked revisions or one checked revision with
     current selected one
 

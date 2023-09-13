@@ -10,19 +10,19 @@ NeoVim plugin to improve experience while working with CVS.
 Features
 ========
 
-- UI for cvs log (Telescope)
-- UI for cvs diff (fileset, Telescope)
-- UI for cvs diff (2-way diff)
-- UI for cvs annotate
-- UI for cvs commit
+* UI for cvs log (Telescope)
+* UI for cvs diff (fileset, Telescope)
+* UI for cvs diff (2-way diff)
+* UI for cvs annotate
+* UI for cvs commit
 
 Installation
 ============
 
 Dependencies
 
-- [Telescope](https://github.com/nvim-telescope/telescope.nvim)
-- [plenary](https://github.com/nvim-lua/plenary.nvim)
+* [Telescope](https://github.com/nvim-telescope/telescope.nvim)
+* [plenary](https://github.com/nvim-lua/plenary.nvim)
 
 Using [Packer](https://github.com/wbthomason/packer.nvim)
 
@@ -45,9 +45,12 @@ CVSLog
 
     :CVSLog [OPTIONS] [FILES OR DIRECTORIES]
 
+![CVSLog UI](https://github.com/mrchnk/cvs.nvim/assets/524109/520b39da-9b14-42ae-9978-d7fb3c5a81b4)
+
 <!-- panvimdoc-ignore-end -->
 <!-- panvimdoc-include-comment
 ```vimdoc
+------------------------------------------------------------------------------
 `:CVSLog [OPTIONS] [FILES OR DIRECTORIES]`                           *:CVSLog*
 ``` -->
 
@@ -61,7 +64,7 @@ ignoring case, order does not matter; each token match one of commit message
 (exact match).
 
 If no file or directory is passed will use current working directory to fetch
-log (like `cvs log` command do)
+log (like `cvs log` command do).
 
 Possible options are:
 
@@ -75,16 +78,18 @@ This will show changes in current working directory for last week:
 
     :CVSLog -d ">1 week ago"
 
-This will show changes during July 2023 for files README.md and LICENSE
+This will show changes during July 2023 for files README.md and LICENSE:
 
     :CVSLog -d 2023-07-01>2023-08-01 README.md LICENSE
 
-This will show changes by mrchnk or nikolai older than 1 year in folder plugin
+This will show changes by mrchnk or nikolai older than 1 year in folder
+plugin:
 
     :CVSLog -A mrchnk -A nikolai -d "<1 year ago" plugin/
 
 Mappings:
 
-* `<CR>` to open diff Telescope for diff of selected commit
+* `<CR>` to open diff for selected commit
 * `<leaeder>d` to compare two checked revisions or one checked revision with
   current selected one
+
