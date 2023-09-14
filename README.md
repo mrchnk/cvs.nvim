@@ -19,12 +19,16 @@ Features
 Installation
 ============
 
-Dependencies
+System dependencies:
 
-* [Telescope](https://github.com/nvim-telescope/telescope.nvim)
-* [plenary](https://github.com/nvim-lua/plenary.nvim)
+* `cvs` tool
 
-Using [Packer](https://github.com/wbthomason/packer.nvim)
+Plugin dependencies:
+
+* `nvim-telescope/telescope.nvim`
+* `nvim-lua/plenary.nvim`
+
+Install using [packer](https://github.com/wbthomason/packer.nvim):
 
     use {
       'mrchnk/cvs.nvim',
@@ -92,4 +96,4 @@ Mappings:
 * `<CR>` to open diff for selected commit
 * `<leader>d` to compare two checked revisions or one checked revision with
   current selected one
-
+* `<TAB>` and `<S-TAB>` to toggle checked selected revision
