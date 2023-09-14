@@ -26,7 +26,7 @@ Dependencies
 
 Using [Packer](https://github.com/wbthomason/packer.nvim)
 
-    use{
+    use {
       'mrchnk/cvs.nvim',
       requires = {
         'nvim-telescope/telescope.nvim',
@@ -43,9 +43,9 @@ You can toggle UI with user commands registered by the plugin
 CVSLog
 ------
 
-    :CVSLog [OPTIONS] [FILES OR DIRECTORIES]
-
 ![CVSLog UI](https://github.com/mrchnk/cvs.nvim/assets/524109/520b39da-9b14-42ae-9978-d7fb3c5a81b4)
+
+    :CVSLog [OPTIONS] [FILES OR DIRECTORIES]
 
 <!-- panvimdoc-ignore-end -->
 <!-- panvimdoc-include-comment
@@ -90,6 +90,6 @@ plugin:
 Mappings:
 
 * `<CR>` to open diff for selected commit
-* `<leaeder>d` to compare two checked revisions or one checked revision with
+* `<leader>d` to compare two checked revisions or one checked revision with
   current selected one
 
