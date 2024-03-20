@@ -401,6 +401,7 @@ return function(opts)
     file = buf_get_var(buf, 'cvs_file') or vim.api.nvim_buf_get_name(buf)
     rev = buf_get_var(buf, 'cvs_rev') or 'HEAD'
   end
+  vim.api.nvim_win_set_buf(win, buf)
   local annotate = cvs.annotate(file, { rev = rev })
   return setmetatable({
     buf = buf,
