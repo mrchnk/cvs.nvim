@@ -96,4 +96,45 @@ Mappings:
 * `<CR>` to open diff for selected commit
 * `<leader>d` to compare two checked revisions or one checked revision with
   current selected one
-* `<TAB>` and `<S-TAB>` to toggle checked selected revision
+* `<TAB>` and `<S-TAB>` to toggle selected revision
+
+<!-- panvimdoc-ignore-start -->
+CVSDiff
+-------
+
+    :CVSDiff [OPTIONS] [FILES OR DIRECTORIES]
+
+<!-- panvimdoc-ignore-end -->
+<!-- panvimdoc-include-comment
+```vimdoc
+------------------------------------------------------------------------------
+`:CVSDiff [OPTIONS] [FILES OR DIRECTORIES]`                         *:CVSDiff*
+``` -->
+
+Will open Telescope for changed files. If single file is passed will show vim
+diff with current version or between versions in a new tab.
+
+Possible options are:
+
+* `-D date` to compare with date (2 options possible)
+* `-r rev` to compare with revision (2 options possible)
+
+Examples:
+
+This will show diff of current working directory with week ago (Telescope)
+
+    :CVSDiff -D "1 week ago"
+
+This will show diff of README.md between revision 1.5 and 1.6 (vim diff)
+
+    :CVSDiff -r 1.5 -r 1.6 README.md
+
+Telescope mappings:
+
+* `<CR>` to checkout file at selected revision
+* `<leader>d` to open vim diff of changes
+* `<leader>a` to add file into CVS repository (cvs add)
+* `<leader>r` to revert changes under the cursor
+* `<leader>c` to commit selected files
+* `<TAB>` and `<S-TAB>` to toggle selected files
+
