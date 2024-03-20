@@ -1,5 +1,5 @@
 local cvs_log = require('cvs.sys.log')
-local make_args = require('cvs.utils.make_args')
+local run = require('cvs.sys.run')
 
 local ANNOTATE_PATTERN = '([%d%.]+)%s+%((%w+)%s+(%d%d%-%w%w%w%-%d%d)%): (.*)'
 
@@ -27,15 +27,11 @@ local function combine(annotate, log)
 end
 
 local function cvs_annotate(file, opts)
-  local cmd = string.format('cvs annotate %s 2>/dev/null', table.concat({
-    make_args({opts.rev}, '-r'),
-    make_args({file}),
-  }, ' '))
-  local out = vim.fn.systemlist(cmd)
-  if vim.v.shell_error > 0 then
-    error('cvs annotate failed: ' .. cmd)
-  end
-  return out
+  return run({
+    'annotate',
+    opts.rev and { '-r', opts.rev } or {},
+    file,
+  }, { expect_code = 0 })
 end
 
 local function parse(lines)

@@ -33,7 +33,7 @@ local function make_commits_log(log)
   local results = {}
   for _, log_entry in ipairs(log) do
     for _, commit in ipairs(log_entry.commits) do
-      local id = commit.commitid
+      local id = commit.commitid or string.format('%s-%s', commit.date, commit.author)
       local entry
       if map[id] then
         entry = map[id]
@@ -43,7 +43,7 @@ local function make_commits_log(log)
           message = commit.message,
           date = commit.date,
           author = commit.author,
-          ts = ts(commit.date),
+          ts = commit.ts or 1,
           files = {}
         }
         map[id] = entry

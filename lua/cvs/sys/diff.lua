@@ -1,15 +1,13 @@
-local make_args = require('cvs.utils.make_args')
+local run = require('cvs.sys.run')
 local FILE_SEP = '==================================================================='
 
 local function cvs_diff(files, opts)
-  local cmd = string.format('TZ=UTC cvs -n diff %s 2>/dev/null', table.concat({
-    '-N',
-    make_args({opts.context or 3}, '-U'),
-    opts.rev_date and table.concat(opts.rev_date, ' ') or '',
-    make_args(files)
-  }, ' '))
-  local lines = vim.fn.systemlist(cmd)
-  return lines
+  return run {
+    '-n', 'diff', '-N',
+    '-u', '-U', opts.context or 3,
+    opts.rev_date,
+    files,
+  }
 end
 
 local function get_rev(line)

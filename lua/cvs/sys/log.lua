@@ -1,24 +1,20 @@
-local make_args = require('cvs.utils.make_args')
+local run = require('cvs.sys.run')
 local FILE_SEP = '============================================================================='
 local COMMIT_SEP = '----------------------------'
 
 local function cvs_log(files, opts)
-  local date_range = opts.date_range
-  local author = opts.author and table.concat(opts.author, ',')
-  local cmd = string.format('TZ=UTC cvs log %s 2>/dev/null', table.concat({
-    date_range and string.format('-d "%s"', date_range) or '',
-    author and string.format('-w%s', author) or '',
-    make_args(files),
-  }, ' '))
-  local lines = vim.fn.systemlist(cmd)
-  if vim.v.shell_error > 0 then
-    error(lines[1])
-  end
-  return lines
+  local date_range = opts.date_range and {'-d', opts.date_range} or {}
+  local author = opts.author and '-w' .. table.concat(opts.author, ',') or {}
+  return run({
+    'log',
+    date_range,
+    author,
+    files,
+  }, { expect_code = 0 })
 end
 
 local function ts(date)
-  local Y, M, D, h, m, s = string.match(date, '(%d+)-(%d%d)-(%d%d) (%d%d):(%d%d):(%d%d)')
+  local Y, M, D, h, m, s = string.match(date, '(%d+)[-/](%d%d)[-/](%d%d) (%d%d):(%d%d):(%d%d)')
   return os.time{
     year = Y,
     month = M,
@@ -43,8 +39,22 @@ local function make_entry(head, commits)
   }
 end
 
+
+local function commit_message(lines)
+  local message
+  for i = 3, #lines do
+    local line = lines[i]
+    if message then
+      table.insert(message, line)
+    elseif #line > 0 then
+      message = {line}
+    end
+  end
+  return message
+end
+
 local function make_commit(lines)
-  local message = {unpack(lines, 3)}
+  local message = commit_message(lines)
   local title = message[1]
   local rev
   if vim.startswith(lines[1], 'revision ') then
@@ -60,7 +70,10 @@ local function make_commit(lines)
     commit[k] = v
   end
   if commit.date then
-    commit.ts = ts(commit.date)
+    local success, t = pcall(ts, commit.date)
+    if success then
+      commit.ts = t
+    end
   end
   return commit
 end
