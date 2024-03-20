@@ -62,6 +62,13 @@ local function win_set_opts(win, opts)
   end
 end
 
+local function buf_get_var(buf, name)
+  local suc, value = pcall(vim.api.nvim_buf_get_var, buf, name)
+  if suc then
+    return value
+  end
+end
+
 local function setup_window(self)
   local win = self.win
   local annotate_win
@@ -371,29 +378,35 @@ end
 --- Open annotate ui for single file
 --- @param opts table annotate ui options
 return function(opts)
+  local buf
   local win
+  local file
+  local rev
   if opts.win and opts.win ~= 0 then
     win = opts.win
   else
     win = vim.api.nvim_get_current_win()
   end
-  local file
   if opts.file then
     file = opts.file
+    if not opts.rev or opts.rev == 'HEAD' then
+      rev = 'HEAD'
+      buf = buf_from_file(file)
+    else
+      rev = opts.rev
+      buf = buf_from_rev(file, rev)
+    end
   else
-    vim.api.nvim_win_call(win, function()
-      file = vim.fn.expand('%')
-    end)
+    buf = opts.buf or vim.api.nvim_get_current_buf()
+    file = buf_get_var(buf, 'cvs_file') or vim.api.nvim_buf_get_name(buf)
+    rev = buf_get_var(buf, 'cvs_rev') or 'HEAD'
   end
-  local buf = opts.buf or
-      opts.rev and buf_from_rev(file, opts.rev) or
-      buf_from_file(file)
-  local annotate = cvs.annotate(file, { rev = opts.rev })
+  local annotate = cvs.annotate(file, { rev = rev })
   return setmetatable({
     buf = buf,
     win = win,
     file = file,
-    rev = opts.rev or 'HEAD',
+    rev = rev,
     _annotate = annotate,
   }, {
     __index = Annotate
