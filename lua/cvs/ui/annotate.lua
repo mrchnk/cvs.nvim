@@ -69,16 +69,19 @@ local function setup_window(self)
     vim.cmd('lefta vs')
     annotate_win = vim.api.nvim_get_current_win()
   end)
-  self._win_opt = win_get_opts(win, { 'cursorbind', 'scrollbind', 'cursorline', 'scrollopt', 'wrap' })
+  self._win_opt = win_get_opts(win, {
+    'scrollbind',
+    'cursorline',
+    'scrollopt',
+    'wrap',
+  })
   win_set_opts(win, {
-    cursorbind = true,
     scrollbind = true,
     cursorline = true,
     scrollopt = 'ver,jump',
     wrap = false,
   })
   win_set_opts(annotate_win, {
-    cursorbind = true,
     scrollbind = true,
     cursorline = true,
     scrollopt = 'ver,jump',
@@ -199,10 +202,25 @@ local function update_popover(self)
   end
 end
 
+local function update_cursor(src, dst)
+  local pos = vim.api.nvim_win_get_cursor(src)
+  vim.api.nvim_win_set_cursor(dst, pos)
+end
+
 local function syncbind(win)
   vim.api.nvim_win_call(win, function()
     vim.cmd.syncbind()
   end)
+end
+
+local function unsubscribe(self)
+  for _, id in ipairs(self._autocmd) do
+    vim.api.nvim_del_autocmd(id)
+  end
+  for _, it in ipairs(self._cmd) do
+    local name, buffer = unpack(it)
+    vim.api.nvim_buf_del_user_command(buffer, name)
+  end
 end
 
 local function subscribe(self)
@@ -230,9 +248,19 @@ local function subscribe(self)
   listen('CursorMoved', self._annotate_buf, function ()
     update_signs(self)
     update_popover(self)
+    update_cursor(self._annotate_win, self.win)
+  end)
+  listen('BufWinLeave', self._annotate_buf, function ()
+    self._annotate_buf = nil
+    self._annotate_win = nil
+    self:close()
+  end)
+  listen('BufWinLeave', self.buf, function ()
+    self:close()
   end)
   listen('CursorMoved', self.buf, function ()
-      update_signs(self)
+    update_signs(self)
+    update_cursor(self.win, self._annotate_win)
   end)
   for name, callback in make_commands(self) do
     for _, buf in ipairs{self._annotate_buf, self.buf} do
@@ -241,16 +269,6 @@ local function subscribe(self)
   end
   self._autocmd = autocmd
   self._cmd = cmd
-end
-
-local function unsubscribe(self)
-  for _, id in ipairs(self._autocmd) do
-    vim.api.nvim_del_autocmd(id)
-  end
-  for _, it in ipairs(self._cmd) do
-    local name, buffer = unpack(it)
-    vim.api.nvim_buf_del_user_command(buffer, name)
-  end
 end
 
 local function on_select(self)
@@ -341,8 +359,12 @@ function Annotate.close(self)
   unsubscribe(self)
   self._popover:close()
   self._signs:close()
-  vim.api.nvim_win_close(self._annotate_win, true)
-  vim.api.nvim_buf_delete(self._annotate_buf, { force = true })
+  if self._annotate_win then
+    vim.api.nvim_win_close(self._annotate_win, true)
+  end
+  if self._annotate_buf then
+    vim.api.nvim_buf_delete(self._annotate_buf, { force = true })
+  end
   win_set_opts(self.win, self._win_opt)
 end
 
