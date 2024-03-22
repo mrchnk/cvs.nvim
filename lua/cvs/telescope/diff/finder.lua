@@ -1,5 +1,6 @@
 local finders = require('telescope.finders')
 local cvs = require('cvs.sys')
+local diff = require('cvs.utils.diff')
 local cvs_hl = require('cvs.ui.highlight')
 
 local function change(e)
@@ -35,20 +36,15 @@ local function make_table_finder(results)
   }
 end
 
-local function file_as_diff(file)
-  local cmd = string.format('diff -U0 /dev/null "%s"', file)
-  return vim.fn.systemlist(cmd)
-end
-
 local function append_unversioned(results, dir)
-  local cmd = string.format('cvs -nq up %s 2>/dev/null', dir or '')
-  local lines = vim.fn.systemlist(cmd)
-  for _, line in ipairs(lines) do
-    if vim.startswith(line, '? ') then
-      local file = string.sub(line, 3)
+  local result = cvs.status(dir)
+  for _, line in ipairs(result) do
+    local status, file = unpack(line)
+    if status == '?' then
+      local body = diff({'/dev/null', file}, {context = 0})
       table.insert(results, {
         file = file,
-        body = file_as_diff(file)
+        body = body,
       })
     end
   end

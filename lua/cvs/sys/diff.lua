@@ -69,6 +69,8 @@ local function parse(lines)
 end
 
 return function (files, opts)
+  files = files or {}
+  opts = opts or {}
   local lines = cvs_diff(files, opts)
   local result = parse(lines)
   return result

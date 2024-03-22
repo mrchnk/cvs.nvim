@@ -1,5 +1,3 @@
-local log = require('cvs.log')
-
 local function escape(arg)
   if string.find(arg, '[ <>]') then
     return '"' .. arg .. '"'
@@ -10,10 +8,11 @@ end
 return function (args, opts)
   args = vim.tbl_map(escape, vim.tbl_flatten(args))
   opts = opts or {}
-  local cmd = 'cvs ' .. table.concat(args, ' ')
+  local cmd = opts.cmd or 'cvs'
+  cmd = cmd .. ' ' .. table.concat(args, ' ')
   local final_cmd = 'TZ=UTC ' .. cmd
   if not opts.error_output then
-    final_cmd =  final_cmd .. ' 2>/dev/null'
+    final_cmd = final_cmd .. ' 2>/dev/null'
   end
   local lines = vim.fn.systemlist(final_cmd)
   local code = vim.v.shell_error
@@ -22,4 +21,3 @@ return function (args, opts)
   end
   return lines, code
 end
-

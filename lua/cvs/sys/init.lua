@@ -6,4 +6,5 @@ return {
   revert = require('cvs.sys.revert'),
   add = require('cvs.sys.add'),
   remove = require('cvs.sys.remove'),
+  status = require('cvs.sys.status'),
 }
