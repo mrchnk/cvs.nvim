@@ -11,9 +11,11 @@ return function (args, opts)
   args = vim.tbl_map(escape, vim.tbl_flatten(args))
   opts = opts or {}
   local cmd = 'cvs ' .. table.concat(args, ' ')
-  local full_cmd = 'TZ=UTC ' .. cmd .. ' 2>/dev/null'
-  log(cmd)
-  local lines = vim.fn.systemlist(full_cmd)
+  local final_cmd = 'TZ=UTC ' .. cmd
+  if not opts.error_output then
+    final_cmd =  final_cmd .. ' 2>/dev/null'
+  end
+  local lines = vim.fn.systemlist(final_cmd)
   local code = vim.v.shell_error
   if opts.expect_code and code ~= opts.expect_code then
     error(string.format('CVS sys failed (%s) code=%d', cmd, code))

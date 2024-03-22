@@ -76,6 +76,16 @@ local function diff_file(bufnr)
   ui_diff(entry.value)
 end
 
+local function revert(file)
+  local lines = cvs.revert(file)
+  vim.fn.input(table.concat(vim.tbl_flatten{
+    'Reverting ' .. file,
+    lines,
+    'Press Enter to continue...',
+    '',
+  }, '\n'))
+end
+
 local function revert_file(bufnr)
   local entry = action_state.get_selected_entry()
   if not entry then
@@ -89,7 +99,7 @@ local function revert_file(bufnr)
     local rev2 = entry.value.rev2
     if rev2 == 'HEAD' then
       if rev1 then
-        cvs.revert({file})
+        revert(file)
       else
         cvs.remove({file})
       end
