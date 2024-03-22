@@ -1,12 +1,14 @@
+local run = require('cvs.sys.run')
+
 local function cvs_remove(file)
-  local tmp = vim.fn.tempname()
-  local cmd = string.format('cvs remove "%s"', file)
-  vim.fn.rename(file, tmp)
-  local out = vim.fn.system(cmd)
-  local is_error = vim.v.shell_error > 0
-  vim.fn.rename(tmp, file)
-  if is_error then
-    error(out)
+  local temp = vim.fn.tempname()
+  vim.fn.rename(file, temp)
+  local _, shell_error = run{
+    "remove", file
+  }
+  vim.fn.rename(temp, file)
+  if shell_error > 0 then
+    error('CVS REMOVE: failed to remove ' .. file)
   end
 end
 
