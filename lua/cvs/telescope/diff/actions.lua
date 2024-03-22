@@ -99,7 +99,7 @@ local function revert_file(bufnr)
     local rev2 = entry.value.rev2
     if rev2 == 'HEAD' then
       if rev1 then
-        revert(file)
+        cvs.revert({file})
       else
         cvs.remove({file})
       end

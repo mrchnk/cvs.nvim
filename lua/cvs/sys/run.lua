@@ -14,6 +14,9 @@ return function (args, opts)
   if not opts.error_output then
     final_cmd = final_cmd .. ' 2>/dev/null'
   end
+  if opts.exec then
+    return vim.cmd('!' .. final_cmd)
+  end
   local lines = vim.fn.systemlist(final_cmd)
   local code = vim.v.shell_error
   if opts.expect_code and code ~= opts.expect_code then
