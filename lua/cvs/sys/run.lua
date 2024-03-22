@@ -16,8 +16,8 @@ return function (args, opts)
   local lines = vim.fn.systemlist(full_cmd)
   local code = vim.v.shell_error
   if opts.expect_code and code ~= opts.expect_code then
-    error(string.format('CVS sys failed (%s) code=%d', cmd, vim.v.shell_error))
+    error(string.format('CVS sys failed (%s) code=%d', cmd, code))
   end
-  return lines, vim.fn.shell_error
+  return lines, code
 end
 
