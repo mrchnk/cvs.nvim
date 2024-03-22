@@ -7,4 +7,5 @@ return {
   add = require('cvs.sys.add'),
   remove = require('cvs.sys.remove'),
   status = require('cvs.sys.status'),
+  commit = require('cvs.sys.commit'),
 }

@@ -128,11 +128,10 @@ local function format_info(files)
 end
 
 local function cvs_commit(files, message)
-  local msg_file = vim.fn.tempname()
-  vim.fn.writefile(message, msg_file)
-  local cmd = string.format('cvs commit -F "%s" %s', msg_file, make_args(files))
-  vim.cmd('!' .. cmd)
-  vim.fn.delete(msg_file)
+  local message_file = vim.fn.tempname()
+  vim.fn.writefile(message, message_file)
+  cvs.commit(files, { message_file = message_file })
+  vim.fn.delete(message_file)
 end
 
 return function (files, opts)

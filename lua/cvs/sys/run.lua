@@ -10,12 +10,12 @@ return function (args, opts)
   opts = opts or {}
   local cmd = opts.cmd or 'cvs'
   cmd = cmd .. ' ' .. table.concat(args, ' ')
+  if opts.exec then
+    return vim.cmd('!' .. cmd)
+  end
   local final_cmd = 'TZ=UTC ' .. cmd
   if not opts.error_output then
     final_cmd = final_cmd .. ' 2>/dev/null'
-  end
-  if opts.exec then
-    return vim.cmd('!' .. final_cmd)
   end
   local lines = vim.fn.systemlist(final_cmd)
   local code = vim.v.shell_error
