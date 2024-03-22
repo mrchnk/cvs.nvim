@@ -1,4 +1,5 @@
 local make_args = require('cvs.utils.make_args')
+local cvs = require('cvs.sys')
 
 local function get_screen_size()
   local width = vim.o.columns
@@ -65,14 +66,6 @@ local function ask_commit_message(msg, cb, opts)
   })
   win = vim.api.nvim_open_win(buf, true, conf)
   vim.cmd.startinsert()
-end
-
-local function cvs_up(files)
-  local cmd = string.format('cvs -n up %s 2>/dev/null', make_args(files))
-  local out = vim.fn.systemlist(cmd)
-  return vim.tbl_map(function (line)
-    return {string.sub(line, 1, 1), string.sub(line, 3)}
-  end, out)
 end
 
 local function has_with_status(s_files, statuses)
@@ -143,7 +136,7 @@ local function cvs_commit(files, message)
 end
 
 return function (files, opts)
-  local s_files = cvs_up(files)
+  local s_files = cvs.status(files)
   local missing_files = with_status(s_files, 'U')
   if #missing_files == 1 then
     error(string.format('File %s is missing', make_args(missing_files)))
