@@ -1,6 +1,6 @@
 local cvs = require('cvs.sys')
-local cmd_id = require('cvs.cmd.id')
 local cvs_hl = require('cvs.ui.highlight')
+local path = require('plenary').path
 local buf_from_file = require('cvs.utils.buf_from_file')
 local buf_from_rev = require('cvs.utils.buf_from_rev')
 local get_temp = require('cvs.utils.get_temp')
@@ -278,13 +278,29 @@ local function subscribe(self)
   self._cmd = cmd
 end
 
-local function on_select(self)
+local function get_prior_rev(entry)
+  local rev = entry and entry.rev
+  if not rev then return end
+  local ver = string.match(rev, "^1%.(%d+)$")
+  if ver and ver ~= "1" then
+    vim.print({rev, ver})
+    return "1." .. tostring(tonumber(ver)-1)
+  else
+    return rev
+  end
+end
+
+local function get_rev(entry)
+  return entry and entry.rev
+end
+
+local function on_select(self, prior)
   local entry, lnum = self:get_cur_entry()
-  if entry and entry.rev and self.rev ~= entry.rev then
+  local rev = prior and get_prior_rev(entry) or get_rev(entry)
+  if rev and rev ~= self.rev then
     self._signs:close()
     unsubscribe(self)
     local file = self.file
-    local rev = entry.rev
     local buf = buf_from_rev(file, rev)
     local view = vim.fn.winsaveview()
     self._prev = {
@@ -303,8 +319,7 @@ local function on_select(self)
     update_annotate(self)
     update_signs(self)
     local new_lnum = find_lnum(self._meta, entry)
-    if new_lnum then
-      print(lnum)
+    if new_lnum and not prior then
       vim.fn.winrestview({
         lnum = new_lnum,
         topline = view.topline + new_lnum - lnum,
@@ -343,6 +358,9 @@ local function mapkeys(self)
   end
   map('n', '<CR>', function()
     on_select(self)
+  end)
+  map('n', '^', function()
+    on_select(self, true)
   end)
   map('n', '<BS>', function()
     go_back(self)
@@ -398,7 +416,8 @@ return function(opts)
     end
   else
     buf = opts.buf or vim.api.nvim_get_current_buf()
-    file = buf_get_var(buf, 'cvs_file') or vim.api.nvim_buf_get_name(buf)
+    file = buf_get_var(buf, 'cvs_file') or
+      path:new(vim.api.nvim_buf_get_name(buf)):make_relative()
     rev = buf_get_var(buf, 'cvs_rev') or 'HEAD'
   end
   vim.api.nvim_win_set_buf(win, buf)
