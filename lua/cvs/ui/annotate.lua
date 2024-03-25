@@ -97,6 +97,7 @@ local function setup_window(self)
     signcolumn = 'no',
   })
   self._annotate_win = annotate_win
+  
 end
 
 function Annotate.get_cur_entry(self)
@@ -377,6 +378,7 @@ function Annotate.open(self)
   mapkeys(self)
   update_annotate(self)
   update_signs(self)
+  update_cursor(self.win, self._annotate_win)
   syncbind(self.win)
 end
 
