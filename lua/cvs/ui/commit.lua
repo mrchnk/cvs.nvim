@@ -1,4 +1,3 @@
-local make_args = require('cvs.utils.make_args')
 local cvs = require('cvs.sys')
 
 local function get_screen_size()
@@ -138,9 +137,9 @@ return function (files, opts)
   local s_files = cvs.status(files)
   local missing_files = with_status(s_files, 'U')
   if #missing_files == 1 then
-    error(string.format('File %s is missing', make_args(missing_files)))
+    error(string.format('File %s is missing', missing_files[1]))
   elseif #missing_files > 1 then
-    error(string.format('Files %s are missing', make_args(missing_files)))
+    error(string.format('Files %s are missing', table.concat(missing_files, ', ')))
   elseif not has_with_status(s_files, {R = true, A = true, M = true}) then
     error('No changes to commit')
   end
