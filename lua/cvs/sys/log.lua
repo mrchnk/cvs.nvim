@@ -87,10 +87,9 @@ local function parse(lines)
     table.insert(result, make_entry(head, commits))
   end
   local function add_commit()
-    if not commit then
-      return
+    if commit then
+      table.insert(commits, make_commit(commit))
     end
-    table.insert(commits, make_commit(commit))
   end
   for _, line in ipairs(lines) do
     if line == FILE_SEP then
