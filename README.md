@@ -102,6 +102,8 @@ Mappings:
 CVSDiff
 -------
 
+![CVSDiff UI](https://github.com/mrchnk/cvs.nvim/assets/524109/e60b71b8-9e5f-4bcd-96a5-2b376878b2b4)
+
     :CVSDiff [OPTIONS] [FILES OR DIRECTORIES]
 
 <!-- panvimdoc-ignore-end -->
