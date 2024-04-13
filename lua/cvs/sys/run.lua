@@ -8,7 +8,7 @@ local function escape(arg)
 end
 
 local function exec(args, opts)
-  args = vim.tbl_map(escape, vim.tbl_flatten(args))
+  args = vim.tbl_map(escape, args)
   opts = opts or {}
   local cmd = opts.cmd or 'cvs'
   cmd = cmd .. ' ' .. table.concat(args, ' ')
@@ -24,7 +24,7 @@ local function find_command(name)
 end
 
 return function (args, opts)
-  args = args or {}
+  args = args and vim.tbl_flatten(args) or {}
   opts = opts or {}
   if opts.exec then
     return exec(args, opts)
