@@ -3,7 +3,7 @@ local cvs_hl = require('cvs.ui.highlight')
 local path = require('plenary').path
 local buf_from_file = require('cvs.utils.buf_from_file')
 local buf_from_rev = require('cvs.utils.buf_from_rev')
-local get_temp = require('cvs.utils.get_temp')
+local build_temp = require('cvs.utils.build_temp')
 local format_commit = require('cvs.utils.format_commit')
 local Popover = require('cvs.ui.popover')
 local Signs = require('cvs.ui.annotate_signs')
@@ -97,7 +97,6 @@ local function setup_window(self)
     signcolumn = 'no',
   })
   self._annotate_win = annotate_win
-  
 end
 
 function Annotate.get_cur_entry(self)
@@ -155,6 +154,7 @@ local function update_annotate(self)
   local buf = self._annotate_buf
   local win = self._annotate_win
   local meta = build_annotate(self)
+  build_temp(meta)
   local max_author_width = max_width(meta, 'author')
   local max_rev_width = max_width(meta, 'rev') + 2
   local max_date_width = max_width(meta, 'date')
@@ -167,7 +167,6 @@ local function update_annotate(self)
     end
   end, meta)
   local width = max_width(lines)
-  local min_ts, max_ts = minmax(meta, function(entry) return entry.ts end)
   vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
   vim.api.nvim_win_set_width(win, width)
   local author_range = {
@@ -180,10 +179,10 @@ local function update_annotate(self)
   }
   for lnum, entry in ipairs(meta) do
     if entry.author then
-      local temp = get_temp(entry.ts, min_ts, max_ts)
-      local hl = cvs_hl.get_annotate(temp)
-      entry.temp = temp
       vim.api.nvim_buf_add_highlight(buf, 0, cvs_hl.id.author, lnum - 1, unpack(author_range))
+    end
+    if entry.temp then
+      local hl = cvs_hl.get_annotate(entry.temp)
       vim.api.nvim_buf_add_highlight(buf, 0, hl, lnum - 1, unpack(date_range))
     end
   end
@@ -393,6 +392,28 @@ function Annotate.close(self)
     vim.api.nvim_buf_delete(self._annotate_buf, { force = true })
   end
   win_set_opts(self.win, self._win_opt)
+end
+
+function Annotate.swap(self, opts)
+  local file = opts.file or self.file
+  local rev = opts.rev or self.rev
+  local buf = opts.buf or
+    rev == 'HEAD' and buf_from_file(file) or
+    buf_from_rev(file, rev)
+  if buf == self.buf then
+    return false
+  end
+  self._signs:close()
+  unsubscribe(self)
+  self.file = file
+  self.rev = rev
+  self.buf = buf
+  self._annotate = cvs.annotate(file, { rev = rev })
+  vim.api.nvim_win_set_buf(self.win, buf)
+  subscribe(self)
+  update_annotate(self)
+  update_signs(self)
+  syncbind(self.win)
 end
 
 --- Open annotate ui for single file
