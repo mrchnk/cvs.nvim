@@ -14,7 +14,6 @@ return function (entries)
       entry.temp = count
     end
   end
-  vim.print({ c = count, l = last_rev })
   if count > 1 then
     for _, entry in ipairs(sorted) do
       if entry.rev then
