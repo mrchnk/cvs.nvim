@@ -283,7 +283,6 @@ local function get_prior_rev(entry)
   if not rev then return end
   local ver = string.match(rev, "^1%.(%d+)$")
   if ver and ver ~= "1" then
-    vim.print({rev, ver})
     return "1." .. tostring(tonumber(ver)-1)
   else
     return rev
