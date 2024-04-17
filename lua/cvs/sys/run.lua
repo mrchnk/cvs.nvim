@@ -32,6 +32,7 @@ return function (args, opts)
   local cmd = opts.cmd or 'cvs'
   local stdout = {}
   local stderr = {}
+  local timeout = opts.timeout or 30000
   local job = Job:new{
     command = find_command(cmd),
     args = args,
@@ -47,7 +48,7 @@ return function (args, opts)
       end
     end,
   }
-  local _, code = job:sync()
+  local _, code = job:sync(timeout)
   if opts.expect_code and code ~= opts.expect_code then
     error(string.format('Command %s failed with code %d', cmd, code))
   end
